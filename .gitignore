@@ -1,0 +1,14 @@
+#gitignore generato da me (si spera che funzioni!)
+#ignora oggetti eseguibili
+*.exe
+*.out
+
+#ignora file multimediali
+*.mp3
+
+#ignora file generazione latex
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
