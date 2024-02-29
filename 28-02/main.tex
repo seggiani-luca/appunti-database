@@ -79,7 +79,7 @@ Le condizioni in SQL supportano anche i classici operatori logici (AND, OR, ecc.
 applicabile ai soli dato di tipo numerico o su cui è comunque stabilita una relazione d'ordine, è il BETWEEN,
 che permette di selezionare (estremi inclusi) tutti i valori in un dato range.
 \par \medskip
-\textbf{Duplicati}
+\textbf{Duplicati} \\
 2 righe risultano uguali se tutti gli attributi del record hanno valori identici. Non si possono avere righe
 uguali in tabelle SQL (la chiave distingue), ma è possibile avere duplicati tra gli attributi non chiave, con
 quindi risultanti problemi dati dalla proiezione di tali attributi su insiemi risultato privi di attributo chiave.
@@ -87,16 +87,13 @@ Nel caso si rendesse necessario eliminare i duplicati da una data query, l'SQL o
 Si nota che il costo per l'eliminazione dei duplicaty è computazionalmente $O(n^2)$, e quindi da evitare quando
 possibile.
 \par \medskip
-\textbf{Valori NULL}
+\textbf{Valori NULL} \\
 I valori NULL corrispondono solitamente a informazioni mancanti, non disponibili o comunque sconosciute.
 Qualsiasi condizione che coinvolge valori NULL è sempre falsa, compreso il confronto fra stessi NULL.
 È possibile utilizzare i valori NULL assegnandoli un valore semanticamente definito (e.g. una data non definita
 perchè non ancora determinata, ecc...). In questo caso, l'SQL offre i costrutti IS NOT NULL e IS NULL, che restituiscono
 rispettivamente falso e vero posti accanto ad un valore NULL. Si nota inoltre che la chiave di un record non
 può essere NULL.
-\par \medskip
-\textbf{Gestione delle date}
-Come per tutti i sistemi UNIX, le date in SQL vengono rappresentate come una distanza in secondi dalla mezzanotte
-del primo gennaio 1970. 
+\par \medskip 
 
 \end{document}
