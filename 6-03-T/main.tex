@@ -1,0 +1,148 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati (Teoria)}
+\author{Luca Seggiani}
+\date{6 Marzo 2024}
+
+\begin{document}
+\maketitle
+\section{Introduzione}
+\textit{Che cos'è l'informatica?}
+\begin{itemize}
+  \item L'informatica è la scienza del trattamento razionale, spesso attraverso macchine automatiche,
+    dell'informazione.
+\end{itemize}
+possiamo fare una distinzione fra:
+\begin{itemize}
+  \item metodologica
+  \item tecnologica
+\end{itemize}
+
+\section{Sistema informativo}
+\begin{itemize}
+  \item Il sistema organizzativo è costituito da risorse e regole per lo svolgimento coordinato di attività
+    di una certa organizzazione (azienda, ente, ecc...) Noi ci concentreremo sul
+  \item Sistema informativo, ovvero la parte del sistema organizzativo che acquisice, conserva, elabora e produce
+    informazioni d'interesse per l'organizzazione. Inoltre esegue e gestisce i processi informativi (che
+    coinvolgono informazioni).
+\end{itemize}
+
+possiamo analizzare più nel dettaglio i tipo di attività svolte dal sistema informativo:
+\begin{itemize}
+  \item Raccolta e acquisizione di informazioni
+  \item Archiviazione e conservazione di suddette informazioni
+  \item Elaborazione, trasformazione e ancora produzione di nuove informazioni sulla base di quelle ottenute
+  \item Distribuzione e comunicazione delle informazioni così elaborate.
+\end{itemize}
+
+Occorre fare attenzione: il sistema informativo non è di per se in alcun modo legato all'informatica (esistono
+sistemi informativi, si pensi ai servizi anagrifici o alle banche, che non usano alcuna automatizzazione). \\
+La parte del sistema informativo che usa la tecnologia informatica è il sistema informativo automatizzato, 
+o semplicemente \textbf{sistema informatico}. \\
+Ricapitolando, possiamo stabilire la seguente relazione:
+\begin{center}
+  Azienda $\rightarrow$ Sistema organizzativo $\rightarrow$ Sistema informativo $\rightarrow$ sistema informatico 
+\end{center}
+\section{Gestione delle informazioni}
+L'informazione può essere gestita secondo modalità diverse, e su supporti diversi. Ad esempio, abbiamo:
+\begin{itemize}
+  \item Idee informali
+  \item Linguaggio naturale
+  \item Disegni, schemi, grafici
+  \item Numeri e codici
+\end{itemize}
+su vari supporti:
+\begin{itemize}
+  \item Mente umana
+  \item Carta
+  \item Dispositivi elettronici (e.g. hard disk, ecc...)
+\end{itemize}
+
+Definiamo ora la differenza fra informazioni e dati:
+\begin{itemize}
+  \item \textbf{Informazione}\\
+    Notizia, dato o elemento che consente di avere una conoscenza dei fatti, situazioni o modi di essere.
+  \item \textbf{Dato} \\
+    Ciò che è immediatamente presente alla conoscenza prima dell'elaborazione. In informatica, elementi di informazione
+    costituiti da \textit{simboli} che devono essere elaborati.
+\end{itemize}
+
+I dati sono spesso codifiche particolari di informazioni, che vanno quindi da essi estrapolate. Ad esempio,
+il codice fiscale, i cartelli stradali, ecc...
+
+\section{La base di dati}
+Il cuore di un sistema informativo automatizzato è la base di dati (database), cioè un insieme organizzato di
+dati rappresentanti informazioni di interesse. Nelle due accezioni (metodologica e tecnologica), possiamo dire:
+\begin{itemize}
+  \item Metodologica: insieme organizzato di dati utilizzati come supporto per lo svolgimento di attività
+  \item Tecnologica: insieme di dati gestito da un DBMS (Database Management System)
+\end{itemize}
+
+Le basi di dati hanno solitamente:
+\begin{itemize}
+  \item Dimensioni molto maggiori della memoria centrale dei sistemi di calcolo utilizzati
+  \item Tempo di vita indipendente dalle signole istanze dei programmi che li utilizzano (persistenza dei dati)
+  \item Supporto per gestione di collezioni di dati condivise fra più dispositivi
+  \item Capacità di garantire privacy, affidabilità, efficienza ed efficacia
+\end{itemize}
+
+Vediamo nel dettaglio dell'aspetto di condivisione:
+\begin{itemize}
+  \item Ogni organizzazione è divisa in settori o almeno svolge disparate attività
+  \item Ciascun settore potrebbe essere fornito di un sottosistema informativo, magari disgiunto a quello principale.
+\end{itemize}
+Questo può chiaramente portare a problemi di:
+\begin{itemize}
+  \item \textbf{Ridondanza}: ripetizione dell'informazione
+  \item \textbf{Incoerenza}: più versioni dell'informazione che non coincidono.
+\end{itemize}
+
+Nota: perchè non usare un semplice archivio di file invece che di un database? \\
+Un archivio non fornisce alcuna gestione dell'interdipendenza fra informazioni, ed è quindi poco portato
+agli eventuali controlli sulla coerenza e la correttezza dell'informazione. Inoltre, in un comune filesystem
+abbiamo a disposizione solamente le operazioni rudimentali di scrittura/lettura, senza particolari controlli
+su concorrenza o funzionalità particolari.
+
+\par\smallskip
+Per ovviare a tutta questa serie di problemi, introduciamo:
+\begin{itemize}
+  \item \textbf{Autorizzazione}: gestione dell'accesso a date risorse
+  \item \textbf{Concorrenza}: gestione dell'accesso \textit{simultaneo} (!) a date risorse
+  \item \textbf{Affidabilità}: resistenza a malfunzionamenti hardware e software. Una tecnica fondamentale
+    in questo campo è la corretta gestione delle \textbf{transazioni}
+  \item \textbf{Efficienza}: gestione ottimale delle risorse in termini di memoria e tempo
+  \item \textbf{Efficacia}: offerta di funzionalità articolate, potenti e flessibili.
+\end{itemize}
+
+Vediamo un'attimo nel dettaglio l'aspetto delle transazioni:
+\par\smallskip
+\textbf{Transazioni}\\
+Una transazione è un insieme di operazioni da considerare indivisibili (\textit{"atomiche"}), corretto
+anche in presenza di concorrenza, e con effetti definitivi a fine esecuzione. Una transazione deve essere
+eseguita \textit{per intero} o \textit{per niente}. La corretta gestione della concorrenza deve invece assicurarsi
+che transazioni concorrenti vengano gestite correttamente (o in serie, e. g. transazioni bancarie, o in maniera
+mutualmente esclusiva, e. g. prenotazione biglietto aereo). La transazione dovrà poi essere permanente, ovvero la conclusione
+positiva di una transazione corrisponde ad un impegno (commit) a mantenere traccia della versione ormai aggiornata
+dei dati a seguito della stessa.
+\par\smallskip
+\textbf{Descrizione dei dati} \\
+Nei programmi tradizionali che accedono a file, ogni programma contiene una descrizione della struttura del
+file stesso, con i conseguenti rischi di incoerenza fra informazioni e file stessa. Ecco perchè nei DBMS è
+opportuno dedicare una porzione della base di dati alla descrizione centralizzata dei dati. Introduciamo il 
+concetto di \textbf{modello dei dati}: un insieme di costrutti utilizzati per organizzare i dati di interesse
+e descriverne le varie dinamiche, fornendoci quindi una vista astratta dei suddetti. Occorre quindi definire
+la differenza fra:
+\begin{itemize}
+  \item \textbf{Schema}: descrizione della struttura della dei dati, solitamente invariante nel tempo (attributi)
+  \item \textbf{Istanza}: i valori attuali immagazzinati nella base di dati, che variano nel tempo (record).
+\end{itemize}
+
+introdiciamo l'elemento fondamentale della base di dati: la \textbf{tabella}. Una comune tabella di una base di dati
+contiene come intestazioni delle sue colonne gli attributi (schema) dei dati immagazinati, mentre le successive righe
+presentano vari record (istanze) dei dati definiti dalle colonne.
+
+\end{document}
