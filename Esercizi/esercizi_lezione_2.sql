@@ -51,4 +51,26 @@ WHERE P2.Medico IS NOT NULL
 
 -- Indicare il reddito medio dei pazienti che sono stati visitati solo da medici con
 -- parcella superiore a 100 euro, negli ultimi sei mesi
+/* STRATEGIA: avrò bisogno di inner join di qualsiasi visita x con ogni altra visita y operata sullo
+stesso paziente. */
+WITH PazientiMesi AS (
+	SELECT P.CodFiscale, P.Reddito, M.Parcella
+    FROM Paziente P
+		INNER JOIN Visita V ON V.Paziente = P.CodFiscale
+        INNER JOIN Medico M ON M.Matricola = V.Medico
+	WHERE V.Data > '2014-05-28' - INTERVAL 12 MONTH
+),
+PazientiParcella AS (
+	SELECT M.CodFiscale, M.Parcella
+    FROM PazientiMesi M
+	WHERE M.Parcella <= 100
+),
+PazientiSelezionati AS (
+	SELECT DISTINCT M.CodFiscale
+	FROM PazientiMesi M
+		LEFT OUTER JOIN PazientiParcella P ON P.CodFiscale = M.CodFiscale
+	WHERE P.CodFiscale IS NULL
+)
 SELECT AVG(P.Reddito)
+FROM Paziente P
+	INNER JOIN PazientiSelezionati S ON S.CodFiscale = P.CodFiscale
