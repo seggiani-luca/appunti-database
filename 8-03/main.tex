@@ -1,0 +1,93 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati}
+\author{Luca Seggiani}
+\date{8 Marzo 2024}
+
+\begin{document}
+\maketitle
+\section{Correttezza di basi di dati}
+Una base di dati può essere scorretta, ovvero immagazinare dati incompatibili con la realtà dei fatti. Ad esempio,
+sarebbe impensabile avere una base di dati contenente voti relativi ad esami universitari, e trovare in tale base di
+dati la valutazione "27 e lode". La correttezza dei dati può essere assicurata grazie al sistema dei vincoli:
+\section{Vincoli di integrità}
+I vincoli di integrità sono sostanzialmente funzioni booleane (predicati) che associano alla istanza completa
+di basi dati un valore vero o falso. Se il vincolo di una base di dati restituisce vero, significa che le sue
+proprietà sono soddisfatte. Possiamo distinguere i vincoli in:
+\begin{itemize}
+  \item \textbf{Vincoli intra-relazionali}:
+    i vincoli intra-relazionali sono definiti rispetto ad una singola relazione. Possiamo portare gli esempi:
+    \begin{itemize}
+      \item Vincolo di n-upla: può essere valutata su ciascuna n-upla indipendentemente dalle altre
+      \item Vincolo di dominio: vincolo di n-upla che coinvolge un solo attributo.
+    \end{itemize}
+  \item \textbf{Vincoli inter-relazionali}:
+    i vincoli inter-relazionali sono definiti rispetto a più relazioni diverse fra loro.
+\end{itemize}
+
+\section{Chiavi}
+Una chiave è un insieme di attributi che identifica univocamente le n-uple. Formalmente:
+una \textbf{superchiave} è un insieme $K$ di attributi di un insieme $r$ se $r$ non contiene due n-uple distinte
+$t_1$ e $t_2$ tali che $t_1[K] = t_2[K]$. Una chiave K è tale per un insieme $r$ se è una superchiave minimale
+in $R$ (cioè non contiene un'altra superchiave). N.B.: non per forza una chiave è unica.
+\par\smallskip
+Qualsiasi relazione ammette sempre almeno una chiave, in quanto una relazione contiene n-uple tutte diverse fra
+loro, ergo tutto l'insieme degli attributi forma sempre una chiave. \\
+L'esistenza di una chiave garantisce l'accessibilità a ciascun dato della base di dati, e permette di correlare
+fra loro dati in relazoni diverse. Le chiavi formano inoltre un vincolo di integrità, detto appunto vincolo di chiave. \\
+Nel caso una relazione abbia più di una chiave, ne scegliamo una in particolare, la chiave primaria (\textit{primary key}). Le altre
+chiavi verranno allora dette chiavi candidate.
+\par\smallskip
+\textbf{Chiavi e valori nulli} \\
+La presenza di valori nulli nelle chiavi può rappresentare un grande problema: rende impossibile il riferimento
+da parte di altre relazioni e non permette l'identificazione univoca di ogni record. Va dunque evitato quando possibile.
+\par\smallskip
+\textbf{Dipendenze Funzionali} \\
+I vincoli di chiave sono particolari tipo di vincoli, che fanno parte di una categoria puù vasta: le \textbf{dipendenze funzionali}.
+Formalmente: dati due insiemi di attributi $X$ e $Y$ sulla relazione $R$, si dice che $X$ determina $Y$, e si scrive
+$X \rightarrow Y$, se e solo se per ogni coppia di n-uple distinte $t_1$ e $t_2$, se $t_1[X] = t_2[X]$, allora $t_1[Y] = t_2[Y]$.
+
+\section{Integrità referenziali}
+Informazioni in relazioni diverse possono essere correlate attraverso valori comuni. Definiamo allora il concetto di chiave
+esterna (\textit{foreign key}), ovvero un'insieme di attributi di una relazione che corrispondono ad una chiave di un'altra
+relazione.
+\par\smallskip
+\textbf{Vincolo di integrità referenziale} \\
+Un vincolo di integrità referenziale fra gli attributi $X$ di una relazione $R_1$ (chiave esterna di $R_1$) e
+un'altra relazione $R_2$ impone ai valori su $X$ di $R_1$ di comparire come valori della chiave primaria di $R_2$. N.B.: in
+questo caso l'ordine dei valori è significativo.
+\par\smallskip
+\textbf{Integrità referenziale e valori nulli} \\
+In presenza di valori nulli i vincoli possono essere resi meno restrittivi: scegliamo da $R_1$ solamente
+i valori di $X$ diversi da NULL.
+
+\section{Operazioni di aggiornamento}
+Le operazioni di aggiornamento di una relazione consistono in sostanza di:
+\begin{itemize}
+  \item Operazioni di inserimento, può violare:
+    \begin{itemize}
+      \item vincoli intra-relazionali
+      \item integrità referenziale
+    \end{itemize}
+  \item Operazione di cancellazione, può violare:
+    \begin{itemize}
+      \item integrità referenziale
+    \end{itemize}
+  \item Operazione di modifica (cancellazione + inserimento), di norma non viola nulla.
+\end{itemize}
+
+La correttezza di queste operazioni è assicurata dal DMBS, che reagirà alle violazioni dei vincoli attraverso azioni compensative.
+\par\smallskip
+\textbf{Azioni compensative}
+Nel caso si provi ad eliminare una n-upla causando violazionzi del vincolo di chiave, il comportamento standard potrebbe essere
+quello del rifiuto dell operazione. Si potrebbero sennò adottare altre azioni compensative, come ad esempio:
+\begin{itemize}
+  \item Eliminazione in cascata
+  \item Introduzione di valori nulli
+\end{itemize}
+
+\end{document}
