@@ -1,0 +1,192 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati (Teoria)}
+\author{Luca Seggiani}
+\date{13 Marzo 2024}
+
+\begin{document}
+\maketitle
+\section{Linguaggi per basi di dati}
+I linguaggi per basi di dati appartengono a 2 categorie distinte:
+\begin{itemize}
+  \item Operazioni sullo schema: \textbf{Data Definition Language (DDL)};
+  \item Operazioni sui dati: \textbf{Data Manipulation Lanaguage (DML)}
+  \begin{itemize}
+    \item Interrogazione (query)
+    \item Aggiornamento (update).
+  \end{itemize}    
+\end{itemize}
+\par\smallskip
+\textbf{Interrogazioni di basi di dati} \\
+Un operazione di interrogazione è un operazione di lettura che richiede l'accessso a una o più tabelle. Per specificare
+interrogazioni si possono seguire due formalismi:
+\begin{itemize}
+  \item \textbf{Modo dichiarativo}: si specificano le proprietà del risultato (che cosa)
+  \item \textbf{Modo procedurale}: si specificano le modalità di generazione del risultato (come).
+\end{itemize}
+L'\textbf{algebra relazionale} permette di specificare delle interrogazioni secondo il modello procedurale: cioè elencando
+i passi "primitivi" necessari alla generazione di una risposta. Il \textbf{calcolo relazionale} invece ci permette di definire
+in modo dichiarativo quello che sarà il risultato dell'interrogazione. Come vedremo, sarà il calcolo relazionale a definire
+la semantica del linguaggio relazionale, perchè permette di fornire un'implementazione slegata dai dettagli procedurali.
+
+\section{Algebra relazionale}
+Un'algebra è una struttura matematica dotata di un'insieme di dati e una serie di operatori che manipolano suddetti dati.
+Nell'algebra relazionale abbiamo che:
+\begin{itemize}
+  \item \textbf{Dati}: relazioni
+  \item \textbf{Operatori}:
+    \begin{itemize}
+      \item su relazioni
+      \item che producono relazioni
+      \item che possono essere composti.
+    \end{itemize}
+    essi sono divisi fra:
+    \begin{itemize}
+      \item \textbf{Operatori su insiemi}: \\
+        unione, intersezione, differenza
+      \item \textbf{Operatori su relazioni}: \\
+        ridenominazione, selezione, proiezione, \\
+        join:
+        \begin{itemize}
+          \item naturale, prodotto cartesiano, theta
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+\par\smallskip
+\textbf{Notazione dell'algebra relazionale} \\
+Specifichiamo adesso la notazione usata:
+\begin{itemize}
+  \item $R,R_1,...$ indicano nomi di relazionie
+  \item $A,B,C,A_1...$ indicano nomi di attributo
+  \item $XY$ è un'abbreviazione di $X \cup Y$
+  \item Una relazione con n-uple $t_1, t_2,...$ è indicata con l'insieme $\{ t_1, t_2, ...\} $
+  \item $t_j[A_j]$ indica il valore della n-upla $t_j$ sull'attributo $A_j$
+  \item $t[X]$ indica l'n-upla ottenuta da considerando solo gli elementi di $X$.
+\end{itemize}
+\par\smallskip
+\textbf{Operatori su insiemi} \\
+Le relazioni sono insiemi di tuple, e non possono avere elementi duplicati (sarebbero altrimenti multiinsiemi). I risultati
+di operazioni fra relazioni sono  a loro volta relazioni, ovvero insiemi di tuple. Gli operatori fra relazioni
+possono applcarsi solo e soltanto fra relazioni definite sullo stesso insieme di attributi $X$, e il risultato sarà
+a sua volta definito sullo stesso insieme di attributi $X$.
+\par\smallskip
+\textbf{Unione} \\
+L'operatore di unione fra due relazioni sull'insieme di attributi $X$ comporta la formazione di una nuova 
+relazione che ha tutte le n-uple delle relazioni unite. Eventuali n-uple identiche fra le relazioni appariranno nel risultato una volta sola.
+Il suo simbolo è $\cup$.
+\par\smallskip
+\textbf{Intersezione} \\
+L'operatore di intersezione fra due relazioni sull'insieme di attributi $X$ restituisce una nuova relazione che contiene
+soltanto gli elementi appartenenti sia alla prima che alla seconda relazione.
+Il suo simbolo è $\cap$.
+\par\smallskip
+\textbf{Ðifferenza} \\
+L'operatore di differenza fra due relazioni sull'insieme di attributi $X$ restituisce una nuova relazione contenente tutte
+le n-uple che appartengono alla prima relazione ma non alla seconda. L'operatore di differenza è l'unico fra gli operatori
+insiemistici a non essere commutativo. Il suo simbolo è il meno ($-$), o più propriamente \textbackslash.
+\par\smallskip
+Notiamo che l'unione è l'unico operatore in grado di creare relazioni con un numero di elementi maggiore di quello degli operandi. Questa
+caratteristica tornerà poi utile nel calcolo relazionale. 
+\par\smallskip
+Descriviamo adesso gli operatori non insiemistici (sulle relazioni):\\
+\textbf{Ridenominazione} \\
+L'operatore di ridenominazione è un'operatore monadico che modifica lo schema dell'operando, lasciando inalterata
+l'istanza. Si scrive, data una relazione $R$, come:
+$$ \rho_{B_1B_2...} \leftarrow_{A_1A_2...(R)} $$
+I pedici a sinistra e a destra della freccia sono insiemi di attributi. Avremo che:
+\begin{itemize}
+  \item L'attributo $A_1$ viene sostituito dall'attributo $B_1$
+  \item L'attributo $A_2$ viene sostituito dall'attributo $B_2$
+  \item ecc...
+\end{itemize}
+\par\smallskip
+\textbf{Selezione} \\
+L'operatore di selezione è un operatore monadico che produce un un risultato con lo stesso
+schema dell'operando, e un sottoinsieme di n-uple che rispettano una determinata condizione. Si scrive come:
+$$ \sigma_F(R)$$
+sulla relazione $R$, dove $F$ è un'espressione Booleana (predicato) ottenuta componendo con gli operatori logici AND, OR e NOT
+le condizioni atomiche:
+\begin{itemize}
+  \item $A \star B$, dove $A$ e $B$ sono attributi di $X$ con domini compatibili e $\star$ un operatore di confronto.
+  \item $A \star k$, dove $A$ è un attributo di $X$ e $k$ una costante con dominio compatibile con $A$ e $\star$ sempre un operatore di confronto. 
+\end{itemize}
+Notiamo che la condizione atomica è vera solo per valori non nulli in ogni attributo.
+\par\smallskip
+\textbf{Selezione valori NULL} \\
+Per riferirsi ai valori NULL occorre usare le apposite condizioni: IS NULL e IS NOT NULL.
+\par\smallskip
+\textbf{Proiezione} \\
+La proiezione è un'operatore monadico che produce un sottoinsieme degli attributi dell'operando contenente tutte
+le sue n-uple ristrette soltanto ad alcuni attributi. Si scrive, data una relazione $R(X)$ e un insieme
+di attributi $Y \subseteq X$, come:
+$$ \pi_Y(R) $$
+Il risultato è una relazione su $Y$ che contiene l'insieme delle n-uple di $R$ ristrette ai soli attributi di $Y$.
+Notare che, di nuovo, non possono esserci righe ripetute. Ogni n-upla ripetuta nell'insieme risultato verrà inserita una volta sola.
+\par
+\textbf{Cardinalità di proiezioni} \\
+Una proiezione contiene al massimo tante n-uple quante ne contiene l'operando. Inolre, se l'insieme di attributi $X$ è superchiave
+della relazione $R$, allora la proiezione $\pi_X(R)$ avrà tante n-uple quante ne ha l'operando.
+\par\smallskip
+\textbf{Join} \\
+Non possiamo, usando gli operatori di selezione e proiezione, estrarre e combinare informazioni da più relazioni diverse fra loro,
+e non possiamo nemmeno combinare informazioni presenti in n-uple diverse di una stessa relazione. Avremo allora bisogno
+di un'ulteriore serie di operazioni, le cosiddette operazioni di join. I join ci permettono di unire sulla stessa riga più righe di
+relazioni diverse. Vediamo nel dettaglio:
+\par\smallskip
+\textbf{Join naturale} \\
+Il join naturale è un'operatore con due operandi (generalizzabile), che produce come risultato l'unione degli attributi degli operandi,
+contente le n-uple costruite ciascuna a partire da un n-upla di ognuno degli operandi. Formalmente:
+Date due relazioni $R_1{X_1}$ e $R_2{X_2}$, il loro join naturale si scrive come:
+$$ R_1 \bowtie R_2 $$
+Il risultato è una relazione $R(X_1 \cup X_2)$ definita come:
+$$R(X_1 \cup X_2) = R_1(X_1) \bowtie R_2(X_2) = \{ t | \exists t_1 \in R_1, \quad t_2 \in R_2 $$
+$$ \mathrm{con} \quad t[X_1]=t_1, \quad t[X_2] = t_2 \}$$
+N.B.: è perfettamente plausibile voler fare il join naturale tra due relazioni senza attributi in comune,
+e in questo caso si ottiene il prodotto cartesiano fra le due.
+\par\smallskip
+\textbf{Cardinalità del join} \\
+Il join di due relazioni $R_1$ e $R_2$ contiene un numero di n-uple compreso fra 0 e il prodotto di $|R_1|$ e $|R_2|$.
+Se il join coinvolge una chiave di $R_2$ allora il numero di n-uple è compreso fra 0 e $|R_1|$. Se il join coinvolge una
+chiave di $R_2$ e un vincolo di integrità referenziale allora il numero di n-uple è uguale a $|R_1|$. Più formalmente: \\
+Il join di $R_1(A, B)$ e $R_2(B,C)$ contiene un un numero di n-uple:
+$$ 0 \Leq |R_1 \bowtie R_2| \leq |R_1| \times |R_2| $$
+Se $B$ è una chiava di $R_2$ allora il numero di n-uple è 
+$$ 0 \leq |R_1 \bowtie R_2| \leq |R_1|$$
+Se $B$ è una chiave di $R_2$ ed esiste un vincolo di integrità referenziale fra $B$ (in $R_1$) e $R_2$ allora il numero delle
+n-uple è:
+$$ |R_1 \bowtie R_2| = |R_1| $$
+Una problematica del join è il fatto che le n-uple che non contribuiscono al risultato ("che non fanno join") restano tagliate fuori.
+Introduciamo allora altri tipi di operatori di join, i cosiddetti:
+\par\smallskip
+\textbf{Join esterno} \\
+Il join esterno estende, con valori NULL, le n-uple che verrebbero altrimenti scartate dal join (interno).
+Ne esistono tre versioni:
+\begin{itemize}
+  \item \textbf{Sinistro}: mantiene tutte le n-uple del primo operando ($\bowtie_{LEFT}$);
+  \item \textbf{Destro}: mantiene tutte le n-uple del secondo operando ($\bowtie_{DESTRO}$);
+  \item \textbf{Completo}: mantiene tutte le n-uple di entrambi gli operandi ($\bowtie_{FULL}$).
+\end{itemize}
+\textbf{Join e proiezioni} \\
+Date due relazioni $R_1(X_1)$ e $R_2(X_2)$:
+$$ \pi_{X_1}(R_1 \bowtie R_2) \subseteq R_1 $$
+Date una relazione  $R(X)$ con $X = X_1 \cup X_2$
+$$ (\pi_{X_1}(R) \bowtie \pi_{X_2}(R)) \supseteq R$$
+\textbf{Prodotto cartesiano} \\
+Come detto prima, date due relazioni $R_1(X_1)$ e $R_2(X_2)$, senza attributi in comune, cioè con $X_1 \cap X_2 = {0}$, la
+definizione di join naturale e comunque senso e restituisce il prodotto cartesiano delle due relazioni:
+$$ R = R_1 \bowtie R_2 = R_1 \times R_2 $$
+la cardinalità del prodotto cartesiano è uguale al prodotto delle cardinalità delle due relazioni.
+\par\smallskip
+\textbf{Theta join} \\
+Nella pratica, il prodotto cartesiano ha senso quasi solamente se seguito da una selezione $\sigma_F(R_1 \times R_2)$.
+Questa combinazione prende il nome di theta join (è un operatore derivato) ed è indicato come:
+$$ R_1 \bowtie_F R_2 $$
+dove $F$ è un certo rpedicato. Spesso $F$ è una congiunzione di atomi di confronto $A_1 \sigma A_2$ dove $\sigma$ è
+un operatore di confronto (<=, <, =, ecc...) e $A_1$ e $A_2$ attributi di relazioni diverse. Quando l'operatore
+di confronto è l'uguaglianza parliamo di equi-join.
+
+\end{document}
