@@ -1,0 +1,185 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati}
+\author{Luca Seggiani}
+\date{27 Marzo 2024}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{code-style}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=code-style}
+
+\begin{document}
+\maketitle
+\section{Subquery}
+Le subquery (query annidate) permettono di incapsulare query in altre query, in modo correlato o non correlato.
+Presentano un modo alternativo di risolvere i problemi su cui normalmente si userebbe il join: infatti per ogni
+problema che si può risolvere usando il join esiste sempre un corrispettivo che usa le subquery. Chiamiamo
+outer query la query più esterna, cioè quella che incapsula, e inner query la subquery incapsulata.
+\par\smallskip
+\textbf{Subquery non correlate} \\
+Le subquery non correlate (\textit{noncorrelated}) sono incapsulate nel WHERE, e permettono di ottenere un certo
+result set intermedio, che verrà poi usato dall'outer query per calcolare il result set finale. Il result set
+della subquery non correlata non dipende dall'outer query. Poniamo ad esempio di voler indicare nome, cognome 
+e parcella degli ortopedici che hanno effettuato almeno una visita nell'anno 2013. Definiremo allora la subquery:
+\begin{lstlisting}[language=SQL]
+SELECT V.Medico
+FROM Visita V
+WHERE YEAR(V.Data) = 2013
+\end{lstlisting}
+che innesteremo poi in:
+\begin{lstlisting}[language=SQL]
+SELECT M.Nome, M.Cognome, M.Parcella
+FROM Medico M
+WHERE M.Specializzazione = 'Ortopedia'
+  AND M.Matricola IN  (
+                      SELECT V.Medico
+                      FROM VIsita V
+                      WHERE YEAR(V.Data) = 2013
+                      );
+\end{lstlisting}
+La parola chiave IN permette di controllare la presenza dell'attributo M.Matricola nel result set della subquery.
+La subquery calcolerà quindi un result set composto da tutte le visite fatte nel 2013. L'outer query userà la subquery,
+confrontandola con tutti i medici specializzati in ortopedia la cui matricola trova un riscontro nel result set
+calcolato dalla subquery. A questo punto si restituiscono gli attributi richiesti. Il meccanismo è del tutto analogo
+a quello di un join naturale fra le tabelle "Medico" e "Visita". Notiamo che non è necessario alcuna istruzione DISTINCT, 
+in quanto ogni record della tabella Medico viene considerato comunque una volta sola, e cercato nel result set delle visite. \\
+Avremmo potuto porre la stessa query usando un comune join, ad esempio come:
+\begin{lstlisting}[language=SQL]
+SELECT M.Nome, M.Cognome, M.Parcella
+FROM Medico M 
+  INNER JOIN Visita V ON V.Medico = M.Matricola
+WHERE YEAR(V.Data) = 2013 
+  AND Medico.Specializzazione = 'Ortopedico';
+\end{lstlisting}
+\par\medskip
+Si può anche usare la negazione di quanto appena fatto, usando la parola chiave NOT IN. Ad esempio, se vogliamo indicare i cognomi
+dei pazienti che non appartengono anche a un medico, abbiamo la subquery:
+\begin{lstlisting}[language=SQL]
+SELECT M.Cognome
+FROM Medico M
+\end{lstlisting}
+innestata in:
+\begin{lstlisting}[language=SQL]
+SELECT DISTINCT P.Cognome
+FROM Paziente P
+WHERE P.Cognome NOT IN  (
+                        SELECT M.Cognome
+                        FROM Medico M
+                        );
+\end{lstlisting}
+\par\smallskip
+Analogamente a prima, esisterà una versione che usa il join:
+\begin{lstlisting}[language=SQL]
+SELECT DISTINCT P.Cognome
+FROM Paziente P
+  LEFT OUTER JOIN Medico M ON
+    M.Cognome = P.Cognome
+WHERE M.Cognome IS NULL;
+\end{lstlisting}
+\textbf{Annidamento multiplo} \\
+Non c'è teoricamente limite al numero di subquery che si possono innestare l'una dentro l'altra. A volte può infatti
+tornare utile avere innesti multipli (e frontali!). Vediamo come ottenere il numero di tutti i pazienti di Siena mai visitati
+da pazienti. Innanzitutto si trovano i medici specializzati in ortopedia:
+\begin{lstlisting}[language=SQL]
+SELECT M.Matricola
+FROM Medico M
+WHERE M.Specializzazione = 'Ortopedia'
+\end{lstlisting}
+\newpage
+poi i pazienti visitati da suddetti medici:
+\begin{lstlisting}[language=SQL]
+SELECT V.Paziente
+FROM Visita V
+WHERE V.Medico IN (...)
+\end{lstlisting}
+e si rimuovono da una tabella dei soli pazienti senesi:
+\begin{lstlisting}[language=SQL]
+SELECT COUNT(*)
+FROM Paziente P
+WHERE P.Citta = 'Siena'
+  AND P.CodFiscale NOT IN (
+    SELECT V.Paziente
+    FROM Visita V
+    WHERE V.Medico IN (
+      SELECT M.Matricola
+      FROM Medico M
+      WHERE M.Specializzazione = 'Ortopedia'
+    )
+  );
+\end{lstlisting}
+\par\smallskip
+\textbf{Subquery scalari} \\
+Una subquery scalare produce, invece che un insieme di record che poi verrà controllato con IN e NOT IN,
+un singolo record di un singolo attributo, come ad esempio farebbe la funzione COUNT(). A questo punto, il valore
+scalare prodotto può essere controllato con i vari operatori di confronto. Vogliamo ad esempio indicare il numero
+degli otorini aventi parcella più alta della media delle parcelle della loro specializzazione. Troviamo innanzitutto
+il la parcella media degli otorini (un valore scalare):
+\begin{lstlisting}[language=SQL]
+SELECT AVG(Medico.Parcella)
+FROM Medico M
+WHERE M.Specializzazione = 'Otorinolaringoiatria'
+\end{lstlisting}
+e la useremo in un'outer query:
+\begin{lstlisting}[language=SQL]
+SELECT COUNT(*)
+FROM Medico M1
+WHERE M1.Parcella >  (
+                      SELECT AVG(Medico.Parcella)
+                      FROM Medico M
+          WHERE M.Specializzazione = 'Otorinolaringoiatria'
+                      );
+
+\end{lstlisting}
+\par\medskip
+Un caso interessante: mettiamo di voler trovare le entrate complessive generate dai cardiologi della clinica
+negli ultimi 2 anni. Ciò risulta semplice con un join:
+\begin{lstlisting}[language=SQL]
+SELECT SUM(M.Parcella) AS IncassoTotale
+FROM Visita V
+INNER JOIN Medico M ON V.Medico = M.Matricola
+WHERE V.Data > CURRENT_DATE - INTERVAL 12 YEAR
+  AND M.Specializzazione = 'Cardiologia'
+\end{lstlisting}
+La versione con subquery è invece più complessa, richiedendo una subquery nel SELECT:
+\begin{lstlisting}[language=SQL]
+SELECT SUM((
+  SELECT M.Parcella
+  FROM Medico M
+  WHERE M.Matricola = V.Medico
+     AND M.Specializzazione = 'Cardiologia'
+)) AS IncassoTotale
+FROM Visita V
+WHERE V.Data > CURRENT_DATE - INTERVAL 12 YEAR
+\end{lstlisting}
+Notiamo che la subquery è correlata, come vedremo nella prossima lezione.
+\end{document}
+

@@ -5,6 +5,47 @@ INNER JOIN Medico M ON V.Medico = M.Matricola
 WHERE V.Data > CURRENT_DATE - INTERVAL 2 YEAR
   AND M.Specializzazione = 'Cardiologia'
 
+-- con subquery:
+SELECT SUM(M.Parcella) AS IncassoTotale --ERRORE: Chi è M?
+FROM Visita V
+WHERE V.Medico IN (
+                  SELECT M.Matricola, M.Parcella
+                  FROM Medico M
+                  WHERE M.Specializzazione = 'Cardiologia'
+                  )
+  AND V.Data > CURRENT_DATE - INTERVAL 2 YEAR
+
+SELECT SUM(M.Parcella) AS IncassoTotale --ERRORE: ogni M compare una volta sola (e non una per ogni visita)
+FROM Medico M
+WHERE M.Matricola IN  (
+                      SELECT V.Medico
+                      FROM Visita V
+                      WHERE V.Data > CURRENT_DATE - INTERVAL 2 YEAR
+                      )
+  AND M.Specializzazione = 'Cardiologia'
+
+SELECT SUM(M1.Parcella) AS IncassoTotale --ERRORE: uguale a prima, solo hai fatto una piroetta prima di spararti in un piede
+FROM Medico M1
+WHERE M1.Matricola IN (
+  SELECT V.Medico
+  FROM Visita V
+  WHERE V.Medico IN (
+    SELECT M.Matricola
+    FROM Medico M
+    WHERE M.Specializzazione = 'Cardiologia'
+  ) AND V.Data > CURRENT_DATE - INTERVAL 2 YEAR
+)
+
+/* FORSE QUESTA? */
+SELECT SUM((
+  SELECT M.Parcella
+  FROM Medico M
+  WHERE M.Matricola = V.Medico
+     AND M.Specializzazione = 'Cardiologia'
+)) AS IncassoTotale
+FROM Visita V
+WHERE V.Data > CURRENT_DATE - INTERVAL 24 YEAR
+
 -- 2) Indicare il numero di pazienti di sesso femminile che, nel quarantesimo anno d’età, sono stati visitati,
 --    una o più volte, sempre dallo stesso gastroenterologo
 WITH PazientiVisitate AS
