@@ -115,3 +115,50 @@ PazientiSelezionati AS (
 SELECT AVG(P.Reddito)
 FROM Paziente P
 	INNER JOIN PazientiSelezionati S ON S.CodFiscale = P.CodFiscale
+
+-- Rifaccio con raggruppamento...
+-- numero di pazienti femmina visitati nel quarantesimo anno di eta dallo stesso gastroenterologo
+SELECT COUNT(DISTINCT P.CodFiscale)
+FROM Visita V 
+  INNER JOIN Paziente P ON P.CodFiscale = V.Paziente
+  INNER JOIN Medico M ON M.Matricola = V.Medico
+WHERE P.Sesso = 'F' 
+  AND V.Data >= P.DataNascita + INTERVAL 39 YEAR
+  AND V.Data < P.DataNascita + INTERVAL 40 YEAR 
+  AND M.Specializzazione = 'Gastroenterologia'
+GROUP BY P.CodFiscale
+HAVING COUNT(DISTINCT M.Matricola) = 1
+
+-- Indicare nome e cognome dei pazienti che sono stati visitati non meno di due
+-- volte dalla dottoressa Gialli Rita
+SELECT P.Nome, P.Cognome
+FROM Visita V 
+  INNER JOIN Paziente P ON V.Paziente = P.CodFiscale
+  INNER JOIN Medico M ON V.Medico = M.Matricola
+WHERE M.Cogome = 'Gialli' AND M.Nome = 'Rita'
+GROUP BY P.CodFiscale
+  HAVING COUNT(M.Matricola) >= 2
+
+-- Indicare il reddito medio dei pazienti che sono stati visitati solo da medici con parcella superiore a 100 euro, negli ultimi sei mesi
+-- STRATEGIA: voglio conto dottori totali = conto dottori parcellosi
+SELECT AVG(P.Reddito)
+FROM Paziente P
+WHERE
+(
+  -- conto parcellosi
+  SELECT COUNT(DISTINCT M.Matricola)
+  FROM Visita V INNER JOIN Medico M ON V.Medico = M.Matricola
+  WHERE V.Paziente = P.CodFiscale AND M.Parcella > 100 AND V.Data + INTERVAL 6 MONTH >= CURRENT_DATE
+) =
+(
+  -- conto tote
+  SELECT COUNT(DISTINCT M.Matricola)
+  FROM Visita V INNER JOIN Medico M ON V.Medico = M.Matricola
+  WHERE V.Paziente = P.CodFiscale AND V.Data + INTERVAL 6 MONTH >= CURRENT_DATE
+) AND
+(
+  -- conto totale
+  SELECT COUNT(DISTINCT M.Matricola)
+  FROM Visita V INNER JOIN Medico M ON V.Medico = M.Matricola
+  WHERE V.Paziente = P.CodFiscale AND V.Data + INTERVAL 6 MONTH >= CURRENT_DATE
+) >= 1

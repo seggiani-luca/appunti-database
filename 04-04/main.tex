@@ -1,0 +1,129 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati}
+\author{Luca Seggiani}
+\date{4 Aprile 2024}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{code-style}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=code-style}
+
+\begin{document}
+\maketitle
+\section{Raggruppamento}
+Il raggruppamento (o aggregazione) divide in gruppi i record risultanti dalle clausole FROM e WHERE (detti record target),
+sulla base di un certo attributo particolare in comune, che resta quindi costante in un determinato gruppo.
+Poniamo di voler calcolare, nello schema clinica, per ogni specializzazione, la parcella media dei medici:
+\begin{lstlisting}[language=SQL]
+SELECT Specializzazione, AVG(Parcella) AS ParcellaMedia
+FROM Medico
+GROUP BY Specializzazione;
+\end{lstlisting}
+Dove il select di Specializzazione e AVG(Parcella) ha senso solo a seguito del GROUP BY, con Specializzazione
+proprio come attributo di raggruppamento (!).
+\par\smallskip
+\textbf{Condizioni sui gruppi} \\
+Le condizioni sui gruppi sono controllate gruppo per gruppo (non record per record) e permettono di scartarne alcuni. 
+Si applicano attraverso l'operatore HAVING.
+Poniamo di voler indicare le specializzazioni della clinica con più di due medici:
+\begin{lstlisting}[language=SQL]
+SELECT Specializzazione
+FROM Medico 
+GROUP BY Specializzazione
+HAVING COUNT(*) > 2
+\end{lstlisting}
+Si nota che il DISTINCT non è necessario: ogni specializzazione viene presa comunque una volta sola.
+Vediamo adesso un caso un attimo più complesso: ottenere le specializzazioni con la più alta parcella media. Dovremo
+allora calcolare tutte le medie delle parcelle dei medici di ciascuna specializzazione, calcolare tra queste
+la più alta, e selezionare quindi le specializzazioni la cui media corrisponde a questa media massima. \newpage
+Il massimo si troverà con:
+\begin{lstlisting}[language=SQL]
+SELECT MAX(D.MediaParcelle)
+FROM (
+  SELECT M2.Specializzazione, AVG(M2.Parcella) AS MediaParcella
+  FROM Medico M2
+  GROUP BY M2.Specializzazione
+)
+AS D;
+\end{lstlisting}
+e la query completa sarà:
+\begin{lstlisting}[language=SQL]
+SELECT M.Specializzazione
+FROM Medico M
+GROUP BY Specializzazione
+HAVING AVG(Parcella) = 
+(
+  SELECT MAX(D.MediaParcelle)
+  FROM (
+    SELECT M2.Specializzazione, AVG(M2.Parcella) AS MediaParcella
+    FROM Medico M2
+    GROUP BY M2.Specializzazione
+  )
+  AS D;
+)
+\end{lstlisting}
+\section{Subquery correlate}
+Abbiamo già visto le subquery non correlate (\textit{non-correlated}): il result set di tali subquery viene calcolato
+una sola volta ed è indipendente dalle specifiche della query esterna (\textit{outer query}). Nelle subquery correlate
+invece il result set dipende da ciascuna tupla della tupla esterna. L'ordine di esecuzione è: prima si esegue
+il WHERE della query esterna, e poi la subquery. Poniamo ad esempio di voler indicare matricola
+e parcella dei medici che hanno visitato per la prima volta almeno un paziente nel mese di ottobre 2013. Avremo
+bisogno di selezionare pazienti che non erano mai stati visitati da un determinato medico prima di ottobre:
+\begin{lstlisting}[language=SQL]
+SELECT DISTINCT V1.Medico
+FROM Visita V1
+WHERE YEAR(V1.Data) = 2013
+  AND MONTH (V1.Data) = 10
+  AND V1.Paziente NOT IN ( 
+                            SELECT V2.Paziente
+                            FROM Visita V2
+                            WHERE V2.Medico = V1.Medico
+                              AND V2.Data < V1.Data
+                          )
+\end{lstlisting}
+Notiamo la particolarità della subquery correlata: la relazione V1, appartenente alla query esterna, viene usata
+nella clausola WHERE della correlata. Ricordiamo che una subquery correlata viene eseguita nuovamente per ogni tupla,
+ed è quindi particolarmente inefficiente dal punto di vista della complessità. Notiamo inoltre che una subquery può
+essere usata anche nella clausola SELECT della query, per calcolare velocemnte un valore da inserire nel risultato. Ad esempio,
+vogliamo trovare tutti i pazienti di sesso maschile, indicandone nome e numero di visite effettuate. Quest'ultima informazione
+non sarà un dato da proiettare (nel WHERE), ma da calcolare nel SELECT.
+\begin{lstlisting}[language=SQL]
+SELECT Nome, (
+  SELECT COUNT(*)
+  FROM Visite V
+  WHERE V.Paziente = P.CodFiscale
+) AS NumeroVisite
+FROM Paziente P
+WHERE P.Sesso = 'M'
+\end{lstlisting}
+\end{document}
+
