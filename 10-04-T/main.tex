@@ -1,0 +1,182 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati}
+\author{Luca Seggiani}
+\date{10 Aprile 2024}
+
+\begin{document}
+\maketitle
+\section{Modellazione e progettazione concettuale}
+La definizione di schemi adeguati per le basi di dati richiede metodologie precise per la modellazione accurata
+della realtà che ci interessa. Bisogna tenere a mente che:
+\begin{itemize}
+  \item Non conviene concetrarsi subito sui dettagli;
+  \item Conviene invece stabilire subito interdipendenze fra relazioni;
+  \item Il modello relazionale sarà rigido una volta ultimato.
+\end{itemize}
+In generale si può dire che esiste sempre (e spesso è unico) uno schema che modella accuratamente e nel modo
+più semplice possibile una certa realtà di interesse. La progettazione di basi di dati è solo una fase delloo
+sviluppo di un sistema informativo (vedere a riguardo le prime lezioni di teoria). Bisogna quindi tenere conto 
+di:
+\begin{itemize}
+  \item \textbf{Ciclo di vita} \textit{(lifecycle)} del sistema informativo, ovvero l'insieme
+    delle attivita svolte da analisti, progettisti e utenti nello sviluppo e nell'uso del sistema informativo.
+    Questa attività è iterativa, e quindi ciclica.
+\end{itemize}
+I passi ciclo di vita dovranno essere ben definiti attraverso linguaggi e modelli prestabiliti. Per le basi di
+dati, in particolare, conviene adottare modelli di facile utilizzo, che consentano la decomposizione delle attività
+in fasi (e/o livelli) distinti, e di utilizzare strategie e criteri di scelta nei vari passaggi.
+\par\smallskip
+\textbf{Modello a cascata} \\
+Il modello a cascata (\textit{waterfall model}) le fasi sono sequenzialmente ordinate, etichettate, e non ripetibili. In ordine,
+esse sono le seguenti:
+\begin{enumerate}
+  \item \textbf{Studio di fattibilità}:
+    definizione di costi e priorità della produzione;
+  \item \textbf{Raccolta e analisi dei requisiti}:
+    studio delle proprietà del sistema che andranno implementate;
+  \item \textbf{Progettazione}:
+    progettazione di strutture dati e funzioni;
+  \item \textbf{Realizzazione}:
+    implementazione effettiva del codice;
+  \item \textbf{Validazione e collaudo}:
+    sperimentazione del prodotto;
+  \item \textbf{Funzionamento}:
+    il sistema diventa opertaivo in produzione (\textit{shipping}).
+\end{enumerate}
+
+Vediamo alcune fasi nel dettaglio.
+\section{Raccolta e analisi dei requisti}
+Questa fase può essere, a sua volta, divisa in due sotto-fasi:
+\begin{itemize}
+  \item \textbf{Acquisizione dei requisiti}: il reperimento dei requisiti è un'attività non standardizzata. Esistono
+    più modalità:
+    \begin{itemize}
+      \item Direttamente dagli utenti:
+      \begin{itemize}
+        \item Interviste, focus group, recensioni, ecc...
+        \item Documentazioni apposite;
+      \end{itemize}
+    \item Attraverso documentazioni preesistenti:
+      \begin{itemize}
+        \item Normative (legislazioni, regolamenti di settore);
+        \item Regolamenti interni, procedure aziendali;
+        \item Realizzazioni preesistenti.
+      \end{itemize}
+    \end{itemize}
+    Esistono linguaggi per definire requisiti (\textit{UML}).
+  \item \textbf{Analisi dei requisiti}: si analizzano i requisiti raccolti, spesso nella prospettiva di successive
+    acquisizioni.
+\end{itemize}
+
+\par\smallskip
+\textbf{Interazione con gli utenti} \\
+Le problematiche dell'interazione con gli utenti possono essere:
+\begin{itemize}
+  \item Utenti diversi danno risposte diverse;
+  \item Utenti a livello più alto hanno spesso una visione più ampia ma meno dettagliata;
+  \item Spesso l'acquisizione di requisiti avviene per raffinazione.
+\end{itemize}
+Conviene quindi:
+\begin{itemize}
+  \item Effettuare spesso verifiche di comprensione e coerenza;
+  \item Verificare anche attraverso esempi (sopratutto nei casi limite);
+  \item Richiedere definizioni e classificazioni chiare e specifiche;
+  \item Separare gli aspetti essenziali da quelli marginali (\textit{ranking}).
+\end{itemize}
+
+\par\smallskip
+\textbf{Interazione con gli utenti tramite documentazione} \\
+E' opportuno seguire alcune linee guide generali, assicurando:
+\begin{itemize}
+  \item Standardizzazione della struttura delle frasi;
+  \item Separazione delle frasi riguardanti dati da quelle riguardanti funzioni;
+  \item Organizzazione di termini e concetti:
+    \begin{itemize}
+      \item Unificazione di termini (eliminazione di sinonimi);
+      \item Esplicitazione del riferimento fra termini;
+    \end{itemize}
+  \item Organizzazione delle frasi per concetti.
+\end{itemize}
+\par\smallskip
+\section{Progettazione}
+La progettazione è una fase del ciclo di vita. Per un sistema software la progettazione si divide effettivamente in:
+\begin{itemize}
+  \item Progettazione dei dati;
+  \item Progettazione delle applicazioni.
+\end{itemize}
+\textbf{Progettazione per astrazione} \\
+Come in tutte le applicazioni informatiche, abbiamo visto che è necessario progettare per livelli successivi di astrazione:
+\begin{itemize}
+  \item \textbf{Livello concettuale}: esprime i requisiti di un sistema in una descrizione adatta all'analisi
+    da punti di vista esterni
+  \item \textbf{Livello logico}: evidenzia l'organizzazione dei dati dal punto di vista del loro contenuto informativo,
+    descrivendo la struttura dei record e le loro interdipendenze.
+  \item \textbf{Livello fisico}: si concentra sulla base di dati vista come un insieme di blocchi fisici sul disco,
+    e riguarda quindi l'allocazione dei dati e le modalità di memorizzazione.
+\end{itemize}
+Con riferimento a quanto detto sugli schemi logici avremo quindi che la progettazione si divide in:
+\begin{itemize}
+  \item \textbf{Progettazione concettuale}, parte dai requisiti individuati della base e produce uno schema concettuale;
+  \item \textbf{Progettazione logica}, parte dallo schema concettuale e produce uno schema logico;
+  \item \textbf{Progettazione fisica}, parta dallo schema logico e produce lo schema fisico finale.
+\end{itemize}
+Come lo era stato il modello a cascata, la progettazione per astrazione è composta da fasi sequenzialmente ordinate che
+vanno eseguite strettamente in ordine.
+\par\smallskip
+\textbf{Modello dei dati} \\
+Il modello dei dati è l'insieme dei costrutti utilizzati per organizzare i dati di interesse e definirne
+la dinamica. Componente fondamentale del modello sono i meccanismi di strutturazione (costruttori di tipi).
+Come per i linguaggi di programmazione comuni, esistono meccanismi che permettono di definire nuovi tipi. Ogni 
+modello dei dati prevede alcuni costruttori: ad esempio il modello relazionale prevede un costruttore relazionale che
+permette di definire insiemi di record omogenei.
+Per riassumere in breve, in ogni base di dati si ha:
+\begin{itemize}
+  \item Lo \textbf{schema}, invariante nel tempo, che ne descrive la struttura. Si notino inoltre le
+    \textbf{intestazioni} delle tabelle (previste nel modello relazionale).
+  \item L'\textbf{istanza}, i valori effettivi assunti dalla base di dati in un dato momento. Nel modello
+    relazionale rappresenta il \textbf{corpo} di ciascuna tabella.
+\end{itemize}
+\par\smallskip
+\textbf{Modello concettuale Entity-Relationship} \\
+Il modello concettuale che utilizzeremo sarà quello \textbf{Entity-Relationship (ER)}. Si noti che la parola \textit{relationship},
+sebbene abbia lo stesso significato in lingua inglese, non si riferisce al concetto matematico di relazione che sta alla base del 
+modello relazionale. Per questo motivo useremo sempre il termine inglese per descrivere le relazioni del modello
+entity-relationship, in modo da distinguerle dalle relazioni del modello relazionale. Il modello entity-relationship
+viene sviluppato da P.P. Chen nel 1976, ed è oggi una delle metodologie più affermate nel campo della progettazione dei sistemi informatici,
+anche se in un'accezione leggermente diversa da quella in cui era stato concepito inizialmmente. \\ I suoi costrutti base sono:
+\begin{itemize}
+  \item Entità
+  \item Relationship
+  \item Attributi
+\end{itemize}
+\par\smallskip
+\textbf{Entità} \\
+Un'entità è una classe di oggetti dell'applicazione d'interesse con proprietà comuni e esistenza autonoma.
+Un'occorrenza (o istanza) di entità è un elemento della classe (un'elemento, non i dati ad esso legati!). Ogni
+entità deve avere un nome che la identifica univocamente nello schema. Graficamente è rappresentato da una scatola.
+\par\smallskip
+\textbf{Relationship} \\
+Una relationship è un legame logico fra due o più entita, rilevante nell'applicazione d'interesse. Può essere chiamata
+anche relazione (vedi sopra), correlazione o associazione. Ogni relationship, come per le entità, ha un nome
+che la identifica univocamente nello schema. Graficamente è rappresentata da una losanga. \\
+Vediamo allora di definire il concetto di occorrenza di relationship, più complesso di quello di occorrenza di entità:
+\begin{itemize}
+  \item Un'occorrenza di \textbf{relationship binaria} è una coppia di occorrenza di entità, una per ciascuna entità coinvolta.
+  \item Una occorrenza di una \textbf{relationship n-aria} è una n-upla di occorenze di entità, una per ciascuna delle $n$ entità coinvolte.
+\end{itemize}
+Nell'ambito di una relationship non ci possono essere occorrenze (né coppie né n-uple) ripetute.
+\par\smallskip
+\textbf{Attributo} \\
+L'attributo è una proprietà elementare di un'entità o di una relationship, che ci interessa ai fini dell'applicazione
+d'interesse. Associa a ogni occorrenza di entità o relationship un valore appartenente ad un dominio, il cosiddetto
+dominio dell'attributo.
+\par\smallskip
+\textbf{Attributo composito} \\
+Gli attributi commpositi raggruppano attributi di una medesima entità o relatioship che presentano affinità nel loro
+significato o uso (e.g. giorno, mese, anno si compone in data, via, numero civico, CAP in indirizzo, ecc...).
+\end{document}
