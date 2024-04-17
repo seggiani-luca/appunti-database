@@ -1,0 +1,351 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati}
+\author{Luca Seggiani}
+\date{17 Aprile 2024}
+
+\usepackage{hyperref}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, shapes.arrows}
+
+\tikzstyle{entity} = [rectangle, text centered, minimum width=3cm, minimum height=1.5cm , draw=black, fill=white]
+\tikzstyle{relationship} = [diamond, text centered, draw=black, fill=white]
+\tikzstyle{arrow} = [->, >=stealth]
+\tikzstyle{connector} = [-, >=stealth]
+\tikzstyle{filledarrow} = [single arrow, draw=black, fill=black, rotate=90, minimum height=0.7cm]
+\tikzstyle{emptyarrow} = [single arrow, draw=black, fill=white, rotate=90, minimum height=0.7cm]
+
+\begin{document}
+\maketitle
+\section{Concetti inesprimibili nel modello ER}
+Alcuni concetti sono inesprimibili attraverso il modello ER tradizionale, e bisognano quindi di costrutti
+particolari:
+\begin{itemize}
+  \item \textbf{Cardinalità}
+    \begin{itemize}
+      \item di relationship;
+      \item di attributo;
+    \end{itemize}
+  \item \textbf{Identificatore}
+    \begin{itemize}
+      \item interno;
+      \item esterno;
+    \end{itemize}
+  \item \textbf{Generalizzazione}
+\end{itemize}
+\par\smallskip
+\textbf{Cardinalità di relationship} \\
+Una cardinalità di relationship è rappresentata da una coppia di valori associati ad ogni entità che partecipa alla
+relationship. Questi specificano il numero minimo e massimo di occorrenze della relationship a cui ciascuna
+occorrenza di entità può partecipare.
+I simboli usati saranno:
+\begin{itemize}
+  \item Per la minima:
+  \begin{itemize}
+    \item 0 $\rightarrow$ partecipazione opzionale
+    \item 1 $\rightarrow$ partecipazione obbligatoria
+  \end{itemize}
+  \item Per la massima:
+    \begin{itemize}
+      \item 1 $\rightarrow$ partecipazione opzionale
+      \item N $\rightarrow$ non pone alcun limite
+    \end{itemize}
+\end{itemize}
+Con riferimento alle cardinalità massime, abbiamo relationship:
+\begin{itemize}
+  \item \textbf{Uno a uno}, ad esempio:\\
+    \begin{tikzpicture}[node distance=2cm]
+      \node (studente) [entity] {Professore};
+      \node (esame) [entity, right of=studente, xshift=8cm] {Cattedra};
+      \node (presenza) [relationship, right of= studente, xshift=3cm] {Titolarità};
+      \draw [arrow] (studente) -- node[anchor=south] {(0, 1)} (presenza);
+      \draw [arrow] (esame) -- node[anchor=south] {(0, 1)} (presenza);
+    \end{tikzpicture} \par\smallskip
+    Un professore può essere tale senza essere titolare di alcuna cattedra, e una cattedra può restare
+    vuota. \par\smallskip
+    \begin{tikzpicture}[node distance=2cm]
+      \node (studente) [entity] {Professore di ruolo};
+      \node (esame) [entity, right of=studente, xshift=8cm] {Cattedra};
+      \node (presenza) [relationship, right of= studente, xshift=3cm] {Titolarità};
+      \draw [arrow] (studente) -- node[anchor=south] {(1, 1)} (presenza);
+      \draw [arrow] (esame) -- node[anchor=south] {(0, 1)} (presenza);
+    \end{tikzpicture} \par\smallskip
+    Un professore di ruolo dovrà ovviamente essere titolare di almeno una cattedra, ma questo non significa
+    comunque che tutte le cattedre siano occupate. \par\smallskip
+    \begin{tikzpicture}[node distance=2cm]
+      \node (studente) [entity] {Professore di ruolo};
+      \node (esame) [entity, right of=studente, xshift=8cm] {Cattedra occupata};
+      \node (presenza) [relationship, right of= studente, xshift=3cm] {Titolarità};
+      \draw [arrow] (studente) -- node[anchor=south] {(1, 1)} (presenza);
+      \draw [arrow] (esame) -- node[anchor=south] {(1, 1)} (presenza);
+    \end{tikzpicture} \par\smallskip
+    E' una forzatura? Sì. Serve a spiegare il concetto? Sempre sì. 
+  \item \textbf{Uno a molti}, ad esempio:\\
+    \begin{tikzpicture}[node distance=2cm]
+      \node (studente) [entity] {Persona};
+      \node (esame) [entity, right of=studente, xshift=8cm] {Azienda};
+      \node (presenza) [relationship, right of= studente, xshift=3cm] {Impiego};
+      \draw [arrow] (studente) -- node[anchor=south] {(0, 1)} (presenza);
+      \draw [arrow] (esame) -- node[anchor=south] {(0, N)} (presenza);
+    \end{tikzpicture} \par\smallskip
+    Una persona può essere o non essere assunta, ma al massimo da una azienda. Al contrario, un'azienda avrà
+    probabilmente più di un'impiegato. \par\smallskip
+    \begin{tikzpicture}[node distance=2cm]
+      \node (studente) [entity] {Ufficiale};
+      \node (esame) [entity, right of=studente, xshift=8cm] {Nave};
+      \node (presenza) [relationship, right of= studente, xshift=3cm] {Comando};
+      \draw [arrow] (studente) -- node[anchor=south] {(1, N)} (presenza);
+      \draw [arrow] (esame) -- node[anchor=south] {(0, 1)} (presenza);
+    \end{tikzpicture} \par\smallskip
+    Un ufficiale per considerarsi tale deve comandare almeno una nave, ma non è detto che tutte le navi abbiano un
+    comandante. Alcune sono navi fantasma come nei Pirati dei caraibi. \par\smallskip
+    \begin{tikzpicture}[node distance=2cm]
+      \node (studente) [entity] {Comune};
+      \node (esame) [entity, right of=studente, xshift=8cm] {Provincia};
+      \node (presenza) [relationship, right of= studente, xshift=3cm] {Ubicazione};
+      \draw [arrow] (studente) -- node[anchor=south] {(1, 1)} (presenza);
+      \draw [arrow] (esame) -- node[anchor=south] {(1, N)} (presenza);
+    \end{tikzpicture} \par\smallskip
+    Ogni comune è ubicato in una e una sola provincia, mentre ogni provincia è l'ubicazione di più comnuni.
+  \item \textbf{Molti a molti}, ad esempio:\\
+    \begin{tikzpicture}[node distance=2cm]
+      \node (studente) [entity] {Studente};
+      \node (esame) [entity, right of=studente, xshift=8cm] {Esame};
+      \node (presenza) [relationship, right of= studente, xshift=3cm] {Presenza};
+      \draw [arrow] (studente) -- node[anchor=south] {(0, N)} (presenza);
+      \draw [arrow] (esame) -- node[anchor=south] {(0, N)} (presenza);
+    \end{tikzpicture} \par\smallskip
+    Non è detto che ogni studente abbia sostenuto un'esame, come non è detto che ogni esame
+    sia stato sostenuto da almeno uno studente. \par\smallskip
+    \begin{tikzpicture}[node distance=2cm]
+      \node (studente) [entity] {Montagna};
+      \node (esame) [entity, right of=studente, xshift=8cm] {Alpinista};
+      \node (presenza) [relationship, right of= studente, xshift=3cm] {Scalata};
+      \draw [arrow] (studente) -- node[anchor=south] {(0, N)} (presenza);
+      \draw [arrow] (esame) -- node[anchor=south] {(1, N)} (presenza);
+    \end{tikzpicture} \par\smallskip
+    Per potersi considerare alpinisti occorre aver scalato almeno una montagna, ma non è detto che tutte le
+    montagne siano state scalate. \par\smallskip
+    \begin{tikzpicture}[node distance=2cm]
+      \node (studente) [entity] {Autore};
+      \node (esame) [entity, right of=studente, xshift=8cm] {Libro};
+      \node (presenza) [relationship, right of= studente, xshift=3cm] {Scrittura};
+      \draw [arrow] (studente) -- node[anchor=south] {(1, N)} (presenza);
+      \draw [arrow] (esame) -- node[anchor=south] {(1, N)} (presenza);
+    \end{tikzpicture} \par\smallskip
+    Ogni autore ha scritto almeno un libro per considerarsi tale, e ogni libro deve essere stato scritto da almeno
+    un autore. Questo però non pregiudica che un autore non possa scrivere più libri o un libro non possa essere scritto
+    scritto da più autori.
+\end{itemize}
+\par\smallskip
+\textbf{Identificatore di entità} \\
+L'identificatore di entità è uno strumento per l'identificazione univoca delle occorrenze di un entità.
+\begin{itemize}
+  \item Gli attributi dell'entità possono formare l'\textbf{identificatore interno} (o chiave). Per capirsi, un'identificatore interno è una chiave primaria o 
+    comunque una chiave candidata. \par\smallskip
+    \begin{tikzpicture}
+    \node (entita) [entity] {Automobile};
+    \fill (2,1) circle (0.1cm);
+    \node[right] at (2.2,1) {Targa};
+    \draw [connector] (1.9,1) -- (entita);
+
+    \draw (2,0) circle (0.1cm);
+    \node[right] at (2.2,0) {Colore};
+    \draw [connector] (1.9,0) -- (entita);
+
+    \draw (2,-1) circle (0.1cm);
+    \node[right] at (2.2,-1) {Modello};
+    \draw [connector] (1.9,-1) -- (entita);
+  \end{tikzpicture} \par\smallskip
+  Come vediamo dalla figura, targa è la chiave primaria, ovvero l'identificatore. Nel caso un'insieme di attributi sia una chiave,
+  adottiamo la rappresentazione seguente: \par\smallskip
+    \begin{tikzpicture}
+    \node (entita) [entity] {Studente};
+    \draw (2,1) circle (0.1cm);
+    \node[right] at (2.2,1) {Nome};
+    \draw [connector] (1.9,1) -- (entita);
+
+    \draw (2,0) circle (0.1cm);
+    \node[right] at (2.2,0) {Cognome};
+    \draw [connector] (1.9,0) -- (entita);
+
+    \draw (2,-1) circle (0.1cm);
+    \node[right] at (2.2,-1) {Età};
+    \draw [connector] (1.9,-1) -- (entita);
+
+    \fill (1.7,1.1) circle (0.1cm);
+    \draw[connector] (1.7, 1.1) -- (1.7, -1.1);
+  \end{tikzpicture} \par\smallskip
+  \item Gli attributi dell'entità e l'identificatore interno di entità esterne raggiunte attraverso relationship formano un'\textbf{identificatore esterno}.
+  un'identificazione esterna può essere possibile solo nel caso esista una relationship in cui l'entità da identificare abbia cardinalità $(1,1)$. Per
+  capirsi, un identificatore è una chiave contenente una chiave esterna.
+    \begin{tikzpicture}[node distance=2cm]
+      \node (studente) [entity] {Studente};
+      \node (esame) [entity, right of=studente, xshift=8cm] {Facoltà};
+      \node (presenza) [relationship, right of= studente, xshift=3cm] {Iscrizione};
+      \draw [arrow] (studente) -- node[anchor=south] {(1, 1)} (presenza);
+      \draw [arrow] (esame) -- node[anchor=south] {(0, N)} (presenza);
+
+      \draw (2,1) circle (0.1cm);
+      \node[right] at (2.2,1) {Nome};
+      \draw [connector] (1.9,1) -- (entita);
+  
+      \fill (1.7,1.1) circle (0.1cm);
+      \draw[connector] (1.7, 1.1) -- (1.7, -1.1);
+    \end{tikzpicture} \par\smallskip
+    Dalla figura si capisce che il nome dello studente e la sua iscrizione a una certa facolà formano il suo identificatore esterno.
+
+\end{itemize}
+Ogni entità deve possedere almeno un identificatore, ma può averne in generale più di uno.
+
+\par\smallskip
+\textbf{Generalizzazione} \\
+La generalizzazione mette in relazione una o più entità $E_1, E_2, ... , E_n$ con una singola entità $E$ che le 
+comprende come casi particolari. Si dice che $E$ è una generalizzazione (oppure entità genitrice, madre) di
+$E_1, E_2, ... , E_n$ (dette specializzazioni, sottotipi o entità figlie). \par\smallskip
+\begin{center}
+\begin{tikzpicture}
+  \node (dipendente) [entity] {Dipendente};
+  \node (funzionario) [entity, right of=dipendente, yshift=-3cm, xshift=-3cm] {Funzionario};
+  \node (amministratore) [entity, right of=dipendente, yshift=-3cm, xshift=1cm] {Amministratore};
+  \node (filled) [filledarrow, right of=dipendente, xshift=-2.2cm] {};
+  \draw [connector] (funzionario) -- (filled);
+  \draw [connector] (amministratore) -- (filled);
+\end{tikzpicture}
+\end{center}
+Le caratteristiche delle generalizzazioni sono:
+\begin{itemize}
+  \item \textbf{Ereditarietà}: tutte le proprietà dell'entità genitore vengono ereditate dalle figlie e non rappresentate
+    esplicitamente.
+  \item \textbf{Generalizzazione totale}: se ogni occorenza dell'entità genitore è rimpiazzata da almeno un occorrenza delle entità
+    figlie, altrimenti si parla di \textbf{generalizzazione parziale}. Di norma le generalizzazioni parziali si indicano
+    con una freccia vuota, mentre quelle totali con una freccia piena.
+\end{itemize}
+  \noindent 
+  \begin{tikzpicture}
+  \node (dipendente) [entity] {Dipendente};
+  \node (funzionario) [entity, right of=dipendente, yshift=-3cm, xshift=-3cm] {Funzionario};
+  \node (amministratore) [entity, right of=dipendente, yshift=-3cm, xshift=1cm] {Amministratore};
+  \node (filled) [filledarrow, right of=dipendente, xshift=-2.2cm] {};
+  \draw [connector] (funzionario) -- (filled);
+  \draw [connector] (amministratore) -- (filled);
+\end{tikzpicture}
+\hspace{0.3cm}
+\begin{tikzpicture}
+  \node (dipendente) [entity] {Persona};
+  \node (funzionario) [entity, right of=dipendente, yshift=-3cm, xshift=-3cm] {Dipendente};
+  \node (amministratore) [entity, right of=dipendente, yshift=-3cm, xshift=1cm] {Studente};
+  \node (filled) [emptyarrow, right of=dipendente, xshift=-2.2cm] {};
+  \draw [connector] (funzionario) -- (filled);
+  \draw [connector] (amministratore) -- (filled);
+\end{tikzpicture}
+\begin{itemize}
+  \item \textbf{Generalizzazione esclusiva}: se ogni occorrenza dell'entità genitrice è occorrenza di al massimo una delle
+    entità figlie, altrimenti si parla di \textbf{generalizzazione sovrapposta}.
+  \item Possono esistere \textbf{gerarchie a più livelli} e multiple generalizzazioni allo stesso livello.
+  \item Un'entità può essere inclusa in più gerarchie, sia come genitore che come figlia, se non entrambe.
+  \item Se una generalizzazione ha solo un'entita figlia si dice \textbf{sottoinsieme}.
+  \item Il genitore di una generalizzazione totale può non avere identificatore (\textbf{anonimato}) purché
+    siano identificate le figlie.
+\end{itemize}
+\section{Progettazione concettuale}
+Vediamo adesso la progettazione concettuale nel dettaglio. Il modello ER sarà lo strumento fondamentale nel corso
+di questa fase: dovremo innanzitutto decidere, per una qualsiasi specifica fornitaci, quale sia il costrutto ER
+più adeguato da utilizzare. Per fare questo ci basiamo sulle definizioni dei costrutti del modello ER:
+\begin{itemize}
+  \item \textbf{Entità}, se un oggetto ha proprietà significative e descrive oggetti con esistenza autonoma;
+  \item \textbf{Attributo}, se un'oggetto è semplice e non ha proprietà specifiche;
+  \item \textbf{Relationship}, se un concetto correla più oggetti;
+  \item \textbf{Generalizzazione}, se un concetto è caso particolare di un altro.
+\end{itemize}
+\par\smallskip
+\textbf{Design pattern} \\
+I design pattern sono soluzioni progettuali a problemi comuni. Sono largamente usati nell'ingegneria del software,
+e ne esistono alcuni comuni nella progettazione delle basi di dati.
+\begin{itemize}
+  \item \textbf{Reificazione di attributo di entità} \\
+La reificazione di un attributo di un'entità è la promozione di tale attributo ad un'entità a sé stante, con ovvia creazione
+di una relationship che esprima il rapporto fra l'entità di partenza e l'attributo che abbiamo trasformato in entità. Supponiamo
+di avere il modello ER:
+\begin{tikzpicture}
+\node (entita) [entity] {Impiegato};
+    \fill (2,1) circle (0.1cm);
+    \node[right] at (2.2,1) {Codice};
+    \draw [connector] (1.9,1) -- (entita);
+
+    \draw (2,0) circle (0.1cm);
+    \node[right] at (2.2,0) {Nome};
+    \draw [connector] (1.9,0) -- (entita);
+
+    \draw (2,-1) circle (0.1cm);
+    \node[right] at (2.2,-1) {Azienda};
+    \draw [connector] (1.9,-1) -- (entita);
+\end{tikzpicture} \par\smallskip
+L'attributo azienda potrebbe essere trasformato in un entità a sé, per poter includere maggiori informazioni rispetto all'azienda stessa:
+\par\smallskip
+\begin{tikzpicture}[node distance=2cm]
+      \node (studente) [entity] {Impiegato};
+
+    \fill (2,1) circle (0.1cm);
+    \node[right] at (2.2,1) {Codice};
+    \draw [connector] (1.9,1) -- (entita);
+
+    \draw (2,-1) circle (0.1cm);
+    \node[right] at (2.2,-1) {Nome};
+    \draw [connector] (1.9,-1) -- (entita);
+
+      \node (esame) [entity, right of=studente, xshift=8cm] {Azienda};
+      \node (presenza) [relationship, right of= studente, xshift=3cm] {Impiego};
+      \draw [arrow] (studente) -- node[anchor=south] {(1, 1)} (presenza);
+      \draw [arrow] (esame) -- node[anchor=south] {(1, N)} (presenza);
+    \end{tikzpicture} \par\smallskip
+\item \textbf{Reificazione di relationship in entità} \\ 
+  La reificazione di una relationship in entità è la promozione di una relationship in un'entità a sé stante, che sarà
+  opportunamente collegata alle entità che metteva prima in relazione fra di loro attraverso altre relationship ausiliarie. Nello specifico,
+  vediamo come usare la reificazione di relationship in entità per reificare relationship binarie e ternarie:
+  \begin{itemize}
+    \item \textbf{Reificazione di relationship binarie} \\
+     Diciamo di avere un modello abbastanza semplice, contenente due entità con identificatore interno legate da una relationship:
+      Magari la relationship potrebbe avere bisogno di più informazioni specifiche: potremo allora usare più approcci alternativi. 
+      Il primo sarà di creare un entità corrispondente alla relationship, e di rendere poi gli attributi di quell'entità e le relazioni
+      con le entità di partenza identificatore esterno. Un'altro approccio sarà quello di assegnare semplicemente alla nuova entità un identificatore
+      univoco.
+    \item \textbf{Reificazione di relationship ternarie} \\
+      Un problema più sostanziale può essere rappresentato da una relationship ternaria. In questo caso si può adottare un approccio analogo
+      al precedente, trasformando la relationship in un entità contenente tutte le informazioni necessario e legata alle entità di partenza con
+      3 distinte relationship, che potranno anche formare l'identificatore esterno della nuova entità.
+    \item \textbf{Reificazione di attributo di relationship}\\
+      Nel modello ER, nessuno ci impedisce di assegnare attributi alle relationship. Questo però andrà molto probabilmente
+      tradotto in un entità a sé stante, che sarà legata attraverso le metodologie che abbiamo appena visto alle entità che legava in partenza.
+  \end{itemize}
+\item \textbf{"Parte di"} \\
+    Il pattern parte di permette di definire concetti che sono parte di altri concetti, come ad esempio un cinema con le sue sale.
+    Viene rappresentato da una relazione "composizione", uno a molti, dove l'oggetto che è parte dell'altro ha identificatore esterno
+    nel primo.
+  \item \textbf{"Istanza di"} \\
+    Il pattern istanza di permette di definire concetti che sono istanze di altri concetti generali, come ad esempio un torneo e le sue edizioni.
+    In questo caso si usa sempre una relazione, "occorrenza", uno a molti, dove l'oggetto occorrenza ha identificatore
+    esterno nell'oggetto generale.
+  \item \textbf{Caso particolare di entità} \\
+    Il pattern caso particolare di entità permette definire casi particolari di determinate entità, attraverso la generalizzazione totale di un entità
+    specializzata su un'entita generale. L'entità specializzata sarà il caso particolare.
+\end{itemize}
+Grafici di modelli ER per i pattern riportati si possono trovare al link:
+\url{https://github.com/Guray00/IngegneriaInformatica/blob/master/PRIMO%20ANNO/II%20SEMESTRE/Basi%20di%20dati/Diapositive/Slides%20Tonellotto/A.A.%2022-23/%5B06%5D%20Progettazione%20Concettuale%20e%20Logica.pdf}
+\par\smallskip
+\textbf{Documentazione associata agli schemi concettuali} \\
+Il modello ER non basta mai da solo a descrivere l'interezza della realtà che vogliamo modellare. Esistono infatti, nonostante tutte
+le aggiunte che abbiamo apportato al modello ER, vincoli inesprimibili, che dovranno essere espressi dalla documentazione di supporto.
+Serviranno quindi:
+\begin{itemize}
+  \item Un \textbf{dizionario dei dati}, ovvero una tabella che contenga informazioni riguardo alle entità e alle relationship
+    che dovranno essere modellizzate dal nostro database.
+  \item \textbf{Regole aziendali}: ovvero informazioni riguardo ai vincoli di integrità necessarie, nonché possibili derivazioni
+    specifiche ai tipi di dati che staremo trattando (formule particolari per il calcolo di indici, medie...).
+\end{itemize}
+\end{document}

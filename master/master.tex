@@ -21,6 +21,16 @@
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, shapes.arrows}
+
+\tikzstyle{entity} = [rectangle, text centered, minimum width=3cm, minimum height=1.5cm , draw=black, fill=white]
+\tikzstyle{relationship} = [diamond, text centered, draw=black, fill=white]
+\tikzstyle{arrow} = [->, >=stealth]
+\tikzstyle{connector} = [-, >=stealth]
+\tikzstyle{filledarrow} = [single arrow, draw=black, fill=black, rotate=90, minimum height=0.7cm]
+\tikzstyle{emptyarrow} = [single arrow, draw=black, fill=white, rotate=90, minimum height=0.7cm]
+
 \lstdefinestyle{code-style}{
     backgroundcolor=\color{backcolour},   
     commentstyle=\color{codegreen},
@@ -51,6 +61,7 @@
 \input{../1-03/main.tex}
 \input{../27-03/main.tex}
 \input{../04-04/main.tex}
+\input{../11-04/main.tex}
 \input{../6-03-T/main.tex}
 \input{../7-03-T/main.tex}
 \input{../8-03-T/main.tex}
@@ -58,4 +69,5 @@
 \input{../14-03-T/main.tex}
 \input{../21-03-T/main.tex}
 \input{../10-04-T/main.tex}
+\input{../17-04-T/main.tex}
 \end{document}

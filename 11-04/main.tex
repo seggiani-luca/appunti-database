@@ -1,0 +1,66 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati}
+\author{Luca Seggiani}
+\date{11 Aprile 2024}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{code-style}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=code-style}
+
+\begin{document}
+\maketitle
+\par\smallskip
+\textbf{Correlated subquery nel SELECT} \\
+L'inserimento di subquery correlate all'interno del SELECT permette di calcolare valori da inserire in un attributo
+dell'insieme risultato. Proprio per questo motivo le subquery di questo tipo dovranno obbligatoriamente essere scalari.
+Poniamo ad esempio di voler considerare il nome e il numero di visite effettuate da tutti i pazienti di sesso maschile.
+Attraverso il raggruppamento, si potrà semplicemente dire:
+\begin{lstlisting}[language=SQL]
+SELECT P.Nome, COUNT(*) AS NumeroVisite
+FROM Visita V INNER JOIN Paziente P ON V.Paziente = P.CodFiscale
+WHERE P.Sesso = "M"
+GROUP BY P.CodFiscale
+\end{lstlisting}
+Lo stesso comportamento può essere ottenuto attraverso le subquery correlate, ad esempio con:
+\begin{lstlisting}[language=SQL]
+SELECT P.Nome, (
+  SELECT COUNT(*)
+  FROM Visite V
+  WHERE V.Paziente = P.CodFiscale
+) AS NumeroVisite
+FROM Paziente P
+WHERE P.Sesso = "M"
+\end{lstlisting}
+Si può assumere che il modulo del DBMS detto \textit{query optimizer}, che ha il compito di ottimizzare le query,
+tradurrà una query simile nell'equivalente che utilizza il raggruppamento.
+\end{document}

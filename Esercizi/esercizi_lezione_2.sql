@@ -72,7 +72,7 @@ FROM (SELECT V.Paziente
     INNER JOIN Medico M ON V.Medico = M.Matricola
   WHERE M.Specializzazione != 'Ortopedia' ) AS D
   RIGHT OUTER JOIN
-  PAziente P ON D.Paziente = P.CodFiscale
+  Paziente P ON D.Paziente = P.CodFiscale
 WHERE D.Paziente IS NULL;
 
 -- Indicare nome e cognome dei pazienti che sono stati visitati non meno di due
