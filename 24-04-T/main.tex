@@ -1,0 +1,165 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati}
+\author{Luca Seggiani}
+\date{24 Aprile 2024}
+
+\begin{document}
+\maketitle
+\section{Strategie di progetto}
+Possiamo definire alcuni tipi di strategie di progetto:
+\begin{itemize}
+  \item \textbf{Top-down} \\
+    Si parte da uno schema iniziale e generale (top) che viene poi definito nei dettagli fino allo schema definitivo (down), muovendosi
+    così, figurativamente, dall'alto verso il basso (zip!). La raffinazione dettagli avviene attraverso l'applicazione di primitive:
+    \par\smallskip
+    \textbf{Primitive di raffinamento}
+    \begin{itemize}
+      \item Da entità a associazione tra entità;
+      \item Da entità a generalizzazione;
+      \item Da associazione a insiemi di associazioni;
+      \item Da associazione a entità con associazioni;
+      \item Introduzione di attributi su entità e associazioni.
+    \end{itemize}
+    Dove associazione è sinonimo di relationship.
+  \item \textbf{Bottom-up} \\
+    Si parte dalle specifiche delle componenti minime dello schema: queste specifiche vengono poi integrate fra di loro a formare lo schema completo.
+    Come prima, figurativamente, dal basso verso l'alto. Questa integrazione avviene attraverso le primitive di trasformazione (o generalizzazione).
+    \par\smallskip
+    \textbf{Primitive di trasformazione}
+    \begin{itemize}
+      \item Generazione di entità;
+      \item Generazione di associazione;
+      \item Generazione di generalizzazione.
+    \end{itemize}
+    Come sopra.
+  \item \textbf{Inside-out} \\
+    La progettazione inside-out è sostanzialmente una generalizzazione della bottom-down, dove si parte da strutture atomiche di complessità minore
+    fino a schemi più complessi e sempre più vicini al risultato finale.
+\end{itemize}
+Nella pratica, una strategia non è mai puramente top-down o bottom-up, ma è più una \textbf{strategia mista}, che può essere sintetizzata come:
+\begin{itemize}
+  \item Individuazione dei concetti principali e realizzazione di uno schema scheletro (un semplice schema concettuale che racchiude
+    i dettagli più importanti della realtà da modellare);
+  \item Decomposizione dello schema scheletro;
+  \item Raffinazione, espansione e integrazione delle componenti dello schema.
+\end{itemize}
+Possiamo definire questa metodologia nei dettagli.
+\begin{itemize}
+  \item \textbf{Analisi dei requisiti}
+    \begin{itemize}
+      \item Analisi dei requisiti ed eliminazione delle ambiguità;
+      \item Costruzione di un glossario di termini;
+      \item Raggruppamento dei requisiti in insiemi omogenei.
+    \end{itemize}
+  \item \textbf{Passo base}
+    \begin{itemize}
+      \item Definizione uno schema scheletro con i concetti più rilevanti.
+    \end{itemize}
+  \item \textbf{Passo iterativo}
+    \begin{itemize}
+      \item Raffinazione dei concetti presenti sulla base delle loro specifiche;
+      \item Aggiunta di concetti necessari a descrivere specifiche non implementate.
+    \end{itemize}
+  \item \textbf{Analisi di qualità}
+    \begin{itemize}
+      \item Verifica della qualità dello schema e seguente modifica se necessaria. La qualità di uno schema concettuale
+        può essere riassunta nella sua:
+        \begin{itemize}
+          \item \textbf{Correttezza}
+          \item \textbf{Completezza}
+          \item \textbf{Leggibilità}
+          \item \textbf{Minimalità}
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+\section{Progettazione logica}
+Giungiamo adesso alla progettazione logica del nostro schema. L'obiettivo della progettazione logica è quello di tradurre lo schema
+concettuale in uno schema logico che rappresenti i dati in modo corretto ed efficiente. Prendiamo quindi in ingresso lo schema concettuale,
+il modello logico usato e una serie di informazioni sul \textbf{carico applicativo}, ovvero lo sforzo a cui sarà sottoposto il sistema; in uscita
+avremo uno schema logico ben definito con relativa documentazione.
+\par\smallskip
+\textbf{Valutazione delle prestazioni} \\
+La valutazione delle prestazioni può essere effettuata attraverso determinati indicatori, ovvero parametri che caratterizzano le prestazioni. I più importanti
+sono
+\begin{itemize}
+  \item \textbf{Spazio}: numero di occorrenze previste;
+  \item \textbf{Tempo}: numero di occorrenze (o relationship) visitate per portare a termine un'operazione.
+\end{itemize}
+Il calcolo degli indicatori di tempo può essere effettuato attraverso una tavola degli accessi: la tavola degli accessi relativa a una data operzione
+si ricava dallo schema di navigazione, costruito sul diagramma ER.
+\par\smallskip
+\textbf{Ristrutturazione dello schema ER} \\
+A volte potrebbe essere necessario ristrutturare lo schema ER: ciò permette di semplificarne la traduzione e ottimizzare le prestazioni del sistema.
+Notiamo che uno schema ER ristrutturato non è più uno schema concettuale nel senso stretto del termine. La ristrutturazione si effettua attraverso i seguenti passaggi:
+\begin{itemize}
+  \item \textbf{Analisi delle ridondanze} \\
+    Una ridondanza in uno schema ER è un'informazione significativa ma derivabile da altre. Nella fase di progettazione logica si decide se eliminare
+    le ridondanze eventualmente presenti nello schema oppure mantenerle (se non addirittura introdurne di nuove). Il vantaggio delle ridondanze è la semplificazione
+    delle interrogazioni; gli svantaggi sono il maggiore spazio richiesto e l'appesantimento delle operazioni di aggiornamento.
+    Le principali forme di ridondanza in uno schema ER sono:
+    \begin{itemize}
+      \item \textbf{Attributi derivabili} \\
+        Attributi che si possono derivare da attributi o della stessa entità o di entità diverse (o relationship).
+      \item \textbf{Relationship derivabili} \\
+        Relationship che si possono derivare dalla composizione di altre relationship (e.g. cicli).
+    \end{itemize}
+  \item \textbf{Eliminazione delle generalizzazioni} \\
+    Il modello relazionale non può rappresentare direttamente le generalizzazioni: dispone solamente di entità (relazioni) e relationship
+    (dipendenza). Per questo motivo è necessario eliminare le gerarchie, sostituendole a loro volta con entità e relationship. Le metodologie possibili
+    sono:
+    \begin{itemize}
+      \item \textbf{Accorpamento delle figlie} della generalizzazione nel genitore, ovvero l'eliminazione della generalizzazione figlia, che verrà
+        trasformata in una relationship ad entità la cui esistenza o non è segnalata da un certo attributo ("tipo"). Si noti che l'entità di partenza mantiene i suoi attributi;
+      \item \textbf{Accorpamento del genitore} della generalizzazione sulle figlie, ovvero un processo simile al precedente in cui si trasforma la gerachia in una serie di relationship. In
+        questo caso gli attributi vanno a ricadere sulle figlie (si "accorpa" sulle figlie), e il genitore può essere eliminato direttamente;
+      \item \textbf{Sostituzione} della generalizzazione con relationship, ovvero la trasformazione diretta in relationship, dove gli attributi dell'entità genitrici e generalizzate restano
+        alle loro entità d'appartenenza, e la loro gerarchia viene trasformata in relationship con cardinalità (0,1) $\rightarrow$ (1,1).
+    \end{itemize}
+    La scelta fra le alternative possibili di eliminazione di generalizzazione può essere fatta sulla base della tabella degli accessi, seguendo alcune linee guida generali:
+    \begin{itemize}
+      \item L'accorpamento delle figlie conviene se gli accessi al padre e alle figlie sono contestuali;
+      \item L'accorpamento del genitore conviene se gli accessi al padre e alle figlie sono differenti;
+      \item La sostituzione conviene se gli accessi alle entità figlie sono separati da quelli al padre.
+    \end{itemize}
+    Notiamo poi che non sono escluse soluzioni ibride, sopratutto nel caso di gerarchie a più livelli.
+  \item \textbf{Partizionamento/accorpamento di entità e relationship} \\
+    Passiamo adesso alle ristrutturazioni fatte per rendere più efficienti le operazioni in base al principio di riduzione
+    degli accessi. Questo si può ottenere:
+    \begin{itemize}
+      \item \textbf{Separando gli attributi} di un concetto a cui si accede separatamente;
+      \item \textbf{Raggruppando attributi} di concetti diversi a cui si accede insieme.
+    \end{itemize}
+    Considereremo, per semplicità, che ad ogni accesso si legge sempre l'intera informazione. Le casistiche principali saranno:
+    \begin{itemize}
+      \item \textbf{Partizionamento verticale} di entità: il partizionamento verticale consiste nel dividere una data entità
+        in due (sotto)entità, con un'opportuna relationship fra di esse. Ognuna delle due entità è in corrispondenza biunivoca con l'altra (cardinalità (1,1))
+        con chiave esterna corrispondente alla relationship per l'entità che non si prende la chiave interna.
+      \item \textbf{Partizionamento orizzontale} di relationship: il partizionamento orizzontale consiste nel dividere una data relationship dotata di attributi in più
+        relationship corrispondenti a diversi valori di un attributo. Ad esempio, la divisione di una relationship d'appartenenza a due relationship di "appartenza corrente" e 
+        "appartenenza passata" in termini temporali.
+      \item \textbf{Eliminazione di attributi multivalore}: l'eliminazione di attributi multivalore viene incontro all'impossibilità di rappresentare attributi multivalore nel modello
+        relazionale. Si trasformano quindi dati attributi in un'entità a sé stante che sarà collegata all'entità di partenza con una relazione di cardinalità (1,N) $\rightarrow$ (1,1) (o (1,N)?).
+      \item \textbf{Accorpamento di entità e relationship}: l'accorpamento di entità e relationship è l'esatto opposto del partizionamento verticale: due entità
+        collegate da una relationship di cardinalità (1,1) $\rightarrow$ (0,1) potranno tranquillamente essere accorpate in un'unica entità con attributi a cardinalità (0,1) corrispondenti agli ex attributi
+        della seconda entità.
+    \end{itemize}
+  \item \textbf{Scelta di identificatori primari}
+    La scelta degli identificatori primari è indispensabile alla traduzione nel modello relazionale, dove esiste il concetto di chiave. I criteri da adottare sono:
+    \begin{itemize}
+      \item L'assenza di opzionalità;
+      \item La semplicità;
+      \item Utilizzo nelle operazioni più frequenti o importanti
+    \end{itemize}
+  Nel caso nessuno degli identificatori soddisfi i requisiti necessari può essere necessario, sebbene sia poco elegante, introdurre nuovi attributi (codici) generati appositamente,
+  magari in maniera incrementale.
+\end{itemize}
+\par\smallskip
+\textbf{Traduzione verso il modello relazionale} \\
+Approcciando la traduzione nel modello relazionale dello schema logico, dovremmo pensare di trasformare entità in relazioni sugli stessi attributi,
+e relationship in relazioni sugli identificatori delle entità coinvolte.
+\end{document}

@@ -1,0 +1,110 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati}
+\author{Luca Seggiani}
+\date{18 Aprile 2024}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{code-style}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=code-style}
+
+\begin{document}
+\maketitle
+\section{Costrutto EXISTS}
+Il costrutto EXISTS ci permette di verificare che il result set di una subquery correlata contenga almeno un
+record. La sua negazione controlla che il result set sia vuoto. Poniamo ad esempio di voler trovare medico,
+paziente e data delle visite di controllo del mese di gennaio 2016. Definiamo una visita di controllo come una
+visita in cui un medico visita un paziente già visitato precedentemente almeno una volta.
+\begin{lstlisting}[language=SQL]
+SELECT V_1.Medico, V_1.Paziente, V_1.Data
+FROM Visita V_1
+WHERE MONTH(V_1.Data) == 1 AND YEAR(V_1.Data) = 2016
+  AND EXISTS
+    (
+    SELECT *
+    FROM Visita V_2
+    WHERE V_2.Paziente = V_1.Paziente
+      AND V_2.Medico = V_1.Medico
+      AND V_2.Data < V_1.Data
+    )
+\end{lstlisting}
+Diciamo invece di voler indicare le matricole dei medici che hanno visitato per la primma volta almeno un paziente
+nel mese di ottobre 2013.
+\begin{lstlisting}[language=SQL]
+SELECT DISTINCT V_1.Medico
+FROM Visita V_1
+WHERE MONTH(V_1.Data) = 10 AND YEAR(V_1.Data) = 2013
+  AND NOT EXISTS
+  (
+  SELECT *
+  FROM Visita V_2
+  WHERE V_2.Paziente = V_1.Paziente
+    AND V_2.Medico AND V_1.Medico
+    AND V_1.Data < V_2.Data
+  )
+\end{lstlisting}
+\section{Divisione insiemistica}
+L'operatore di divisionie insiemistica permette di trovare tutti i record che rispettano condizioni esaustive. Ad esempio,
+possiamo usarlo per indicare i pazienti visitati da tutti i medici. L'SQL non fornisce un'operatore di divisione insiemistica
+di per sé, ma possiamo crearne uno attraverso altri costrutti. Esistono due metodi:
+\begin{itemize}
+  \item
+  Possiamo usare il costrutto EXISTS e le subquery correlate per ottenere la seguente query:
+    \begin{lstlisting}[language=SQL]
+    SELECT P.CodFiscale
+    FROM Paziente P
+    WHERE NOT EXISTS 
+    (
+      SELECT *
+      FROM Medico M
+      WHERE NOT EXISTS
+      (
+        SELECT *
+        FROM Visita V
+        WHERE V.Medico = M.Matricola
+        AND V.Paziente = P.CodFiscale
+      )
+    )
+    \end{lstlisting}
+    La query si traduce pressapoco con "un paziente è stato visitato da tutti i medici se non esiste un medico per cui
+    non esiste una visita di quel medico con quel paziente".
+  \item Possiamo usare il raggruppamento e una subquery non correlata:
+    \begin{lstlisting}[language=SQL]
+    SELECT V.Paziente
+    FROM Visita V
+    GROUP BY V.Paziente
+    HAVING COUNT(DISTINCT V.Medico) = (SELECT COUNT(*)
+                                        FROM Medico)
+    \end{lstlisting}
+    Che è considerevolmente più semplice.
+\end{itemize}
+\end{document}

@@ -1,0 +1,277 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati}
+\author{Luca Seggiani}
+\date{2 Maggio 2024}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{code-style}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=code-style}
+
+\begin{document}
+\maketitle
+\section{SQL Procedurale}
+Introduciamo adesso il PL/SQL, un linguaggio di programmazione procedurale che estende l'SQL.
+\par\smallskip
+\textbf{Stored procedure} \\
+Le stored procedure (procedure "stoccate") sono dei programmi dichiarativo-procedurali che possono essere memorizzati nel DBMS
+e invocati proprio come funzioni nei linguaggi di programmazione tradizionali, restituendo valori. Procedure possono essere dichiarate
+e poi chiamate all'interno di query, o altre procedure.
+\par\smallskip
+\textbf{Interfacce con stored procedure} \\
+Il meccanismo delle stored procedure può essere usato per implementare delle interfacce: all'utente non si mette a disposizione l'SQL, ma soltanto
+le procedure definite su quel DBMS. In questo modo l'utente non ha mai effettivamente accesso al database stesso, ma può comunque interagirci con procedure già definite.
+Questo sistema assicura il mascheramento dei dati e del codice, aumentando la sicurezza e la protezione da eventuali attacchi.
+Meccanismi di questo tipo sono alla base di architetture \textbf{multilivello} (\textit{multi-tier}) usati ad esempio nei siti internet:
+l'uso di procedure predefinite per l'interazione fra server e database, e quindi fra utente e server, permette di aumentare la sicurezza del sistema.
+L'invocazione di procedure richiede, da parte del chiamante, il possesso di un particolare \textbf{grant} ("permesso"), che garantisce l'accesso
+del suddetto a tali procedure. E' ad esempio possibile che un'applicazione abbia accesso alle procedure ma non alle tabelle del database. Vediamo un'esempio.
+Vogliamo scrivere una stored procedure che restituisca tuttte le specializzazioni mediche offerte dalla clinica. Dovremo usare la seguente sintassi:
+
+\begin{lstlisting}[language=SQL]
+DROP PROCEDURE IF EXISTS mostra_specializzazioni
+DELIMITER $$
+CREATE PROCEDURE mostra_specializzazioni()
+  BEGIN
+    SELECT DISTINCT Specializzazione
+    FROM Medico
+  END $$
+DELIMITER;
+\end{lstlisting}
+Il pasticcio di delimitatori serve a far ignorare all'SQL l'uso del ; all'interno della procedura, che altrimenti significherebbe
+"compila quanto hai letto fino ad ora". Alla fine della dichiarazione reimpostiamo il delimitatore a quello di default. \\
+Potremo adesso chiamare la procedure con:
+\begin{lstlisting}[language=SQL]
+CALL mostra_specializzazioni()
+\end{lstlisting}
+\par\smallskip
+\textbf{Variabili locali} \\
+All'interne delle stored procedure è possibile memorizzante informazioni intermedie di ausilio, attraverso variabili locali. La dichiarazione
+di variabili locali va fatta contestualmente alla dichiarazione della procedura (cioè subito) con la sintassi:
+\begin{lstlisting}[language=SQL]
+DECLARE nome_variabile tipo(size) DEFAULT valore_default;
+\end{lstlisting}
+La tipizzazione è forte, e sono presenti i classici tipi (int, double, char, date...). Il valore size rappresenta la dimensione della variabile:
+ad esempio, per il tipo char, potremo specificare char(50) per indicare una stringa di 50 caratteri. Il tipo varchar è un tipo particolare che può
+variare la sua dimensione, occupando \textit{al massimo} il valore fornito alla dichiarazione. Si può fare assegnamento sulle variabili attraverso la parola
+chiave SET:
+\begin{lstlisting}[language=SQL]
+DECLARE min_visite_mensili INT DEFAULT 0;
+
+% il corpo della procedura...
+
+SET min_visite_mensili = 20;
+\end{lstlisting}
+Facciamo un'esempio: supponiamo di essere nel body di una stored procedure e creare una variabile contenente il numero minimo di visite effettuate questo mese, avremo:
+\begin{lstlisting}[language=SQL]
+DECLARE visite_mese_attuale INT DEFAULT 0;
+
+% il corpo della procedura...
+
+SET visite_mese_attuale = (
+  SELECT COUNT(*)
+  FROM Visita V
+  WHERE MONTH(V.Data) = MONTH(CURRENT_DATE)
+    AND YEAR(V.Data) = YEAR(CURRENT_DATE)
+)
+\end{lstlisting}
+oppure, analogamente:
+\begin{lstlisting}[language=SQL]
+DECLARE visite_mese_attuale INT DEFAULT 0;
+
+% il corpo della procedura...
+
+SELECT COUNT(*)
+FROM Visita V
+WHERE MONTH(V.Data) = MONTH(CURRENT_DATE)
+  AND YEAR(V.Data) = YEAR(CURRENT_DATE)
+INTO visite_mese_attuale
+\end{lstlisting}
+Notiamo l'errore (di impedenza) in cui potremmo incorrere facendo qualcosa del tipo:
+\begin{lstlisting}[language=SQL]
+DECLARE visite_mese_attuale VARCHAR(255)
+SELECT * INTO visite_mese_attuale
+FROM Visita V
+WHERE MONTH(V.Data) = MONTH(CURRENT_DATE)
+  AND YEAR(V.Data) = YEAR(CURRENT_DATE)
+\end{lstlisting}
+Non possiamo infatti immagazzinare (anzi, "collassare") un'intero record in una sola variabile di tipo VARCHAR.
+\par\smallskip
+\textbf{Variabili user-defined} \\
+Le variabili user-defined sono variabili definite dall'utente senza necessità di dichiarazione, che hanno tempo di vita 
+uguale alla durata della connessione dell'utente al server. A differenza delle variabili locali, le variabili user-defined hanno
+tipizzazione debole e dinamica: potremo memorizzarvici qualsiasi tipo di valore, e anche valori di tipi diversi in momenti diversi.
+Non possono contenere result set, ma solo valori scalari. Si dichiarano con @.
+\par\smallskip
+\textbf{Parametri di una stored procedure} \\
+Una stored procedure MySQL accetta parametri di tipo:
+\begin{itemize}
+  \item \textbf{Ingresso} \\
+    Un parametro di ingresso può essere letto, ma non modificato. Equivale al passaggio per valore del C++. Si dichiara
+    con la parola chiave IN. Ad esempio, poniamo di voler scrivere una stored procedure che stampi la parcella media di una specializzazione
+    specificata come parametro:
+    \begin{lstlisting}[language=SQL]
+DROP PROCEDURE IF EXISTS parcella_media_spec;  
+DELIMITER $$
+CREATE PROCEDURE parcella_media_spec(IN _specializzazione VARCHAR(100))
+% resto del codice...
+DELIMITER;
+\end{lstlisting}
+    a questo punto potremo chiamare la procedura con:
+    \begin{lstlisting}[language=SQL] 
+CALL parcella_media_spec('Ortopedia');
+\end{lstlisting}
+  \item \textbf{Uscita} \\
+Un parametro di uscita può essere modificato dalla procedura, e viene fornito in fase di chiamata dal chiamante. Nella chiamata si possono usare,
+nei parametri di uscita, variabili user defined (@variabile). \\
+Facciamo un'esempio: vogliamo scrivere una stored porcedure che restituisca \textit{come parametro di uscita} il numero di pazienti visitati da medici di una data
+specializzazione, ricevuta come parametro di ingresso:
+\begin{lstlisting}[language=SQL]
+DROP PROCEDURE IF EXISTS parcella_media_spec;  
+DELIMITER $$
+CREATE PROCEDURE parcella_media_spec(IN _specializzazione VARCHAR(100), OUT totale_pazienti INT)
+% resto del codice...
+DELIMITER;
+
+\end{lstlisting}
+come prima, potremo adesso chiamare la procedura con la sintassi:
+\begin{lstlisting}[language=SQL]
+CALL tot_pazienti_visitati_spec('Neurologia', @quantiPazienti);
+SELECT @quantiPazienti
+\end{lstlisting}
+dove @quantiPazienti è una variabile user-defined. \\
+Si noti che si possono avere più parametri di uscita in una procedura SQL.
+  \item \textbf{Ingresso-uscita} \\
+    Non vengono trattate da questo corso. In altre parole t'attacchi.
+\end{itemize}
+\par\smallskip
+\textbf{Istruzioni condizionali} \\
+Le espressioni condizionali permettono di esprimere condizioni, modificando il flusso di esecuzioni. Possono
+contenere letterali, variabili e funzioni. Nell'SQL si riducono alle due parole chiave: IF e CASE.
+\begin{itemize}
+  \item \textbf{Istruzione IF} \\
+    L'IF è analogo a quello di altri linguaggi, con l'inclusione del THEN:
+    \begin{lstlisting}[language=SQL]
+IF if_condition THEN
+  -- blocco di istruzioni 
+ELSEIF elseif_1_condition THEN
+ ...
+ELSEIF elseif_N_condition THEN
+ELSE
+  -- blocco di else
+END IF;
+    \end{lstlisting}
+  \item \textbf{Istruzione CASE} \\
+    Vediamo il CASE:
+    \begin{lstlisting}[language=SQL]
+CASE 
+WHEN condition_1 THEN
+  -- blocco 1
+ ...
+WHEN condition_n THEN
+  --blocco n
+END CASE
+\end{lstlisting}
+\end{itemize}
+\par\smallskip
+\textbf{Istruzioni iterative} \\
+Le struzioni iterative permettono di ripetere blocchi di codice. L'SQL fornisce il WHILE, il REPAT, e il LOOP.
+\begin{itemize}
+  \item \textbf{Istruzione WHILE} \\
+    Corrisponde al semplice while.
+  \begin{lstlisting}[language=SQL]
+WHILE condition DO
+  -- blocco istruzioni
+END WHIILE
+\end{lstlisting}
+\item \textbf{Istruzione REPEAT} \\
+  \begin{lstlisting}[language=SQL]
+REPEAT
+  -- blocco istruzioni
+UNTIL condition
+END REPEAT
+\end{lstlisting}
+\item \textbf{Istruzione LOOP} \\
+Definisce un LOOP, che andrà chiuso con un'istruzione LEAVE.
+\begin{lstlisting}[language=SQL]
+loop_label: LOOP
+  -- blocco di istruzioni, check di condizioni
+END LOOP
+\end{lstlisting}
+\end{itemize}
+\par\smallskip
+\textbf{Istruzioni di salto} \\
+Le istruzioni di salto permettono di interrompere cicli o passare a iterazioni successive. Nell'SQL sono rispettivamente
+la LEAVE e ITERATE.
+\par\medskip
+\textbf{Cursore} \\
+Un cursore scorre i record su un result set, solo in avanti, per effettuare delle azioni all'interno di istruzioni iterative.
+Vediamo la sintessi:
+\begin{lstlisting}[language=SQL]
+DECLARE NomeCursore CURSOR FOR
+SQL query;
+\end{lstlisting}
+I cursori si possono dichiarare immediatamente dopo la dichiarazione di tutte le variabili, contestualmente alla dichiarazione
+della procedura. Su un cursore valgono le seguenti operazioni:
+\begin{lstlisting}[language=SQL]
+OPEN NomeCursore;
+FETCH NomeCursore INTO ListaVariabili;
+CLOSE NomeCursore;
+\end{lstlisting}
+La prima e l'ultima operazione sono banali. Il FETCH si limita a restituire il prossimo record e avanzare il cursore.
+\par\smallskip
+\textbf{Handler} \\
+Gli handler sono gestori di situazioni, utili per eseguire codice quando l'istruzione fetch porta il cursore in fondo alla tabella.
+Possono essere definiti dopo le dichiarazioni di variabili e cursori, sempre contestualmente alla dichiarazione della procedura.
+Ad esempio, esiste il NOT FOUND HANDLER:
+\begin{lstlisting}[language=SQL]
+DECLARE CONTINUE HANDLER FOR NOT FOUND
+SET finito = 1;
+\end{lstlisting}
+Questo handler viene eseguito quando si arriva a "fine corsa", ovvero in fondo alla tabella che si stava scorrendo.
+La parola chiave CONTINUE rappresenta il fatto che l'handler non interrompe l'esecuzione, a differenza di un handler EXIT.
+\par\smallskip
+\textbf{Ciclo di fetch} \\
+Il meccanismo del FETCH e degli HANDLER ci permette di stabilire un ciclo di fetch:
+\begin{lstlisting}[language=SQL]
+DECLARE cur CURSOR FOR tabella
+DECLARE CONTINUE HANDLER FOR NOT FOUND
+SET finito = 1;
+
+scan: LOOP
+FETCH cur -- prelieva il record
+IF finito = 0
+  -- processo il record
+ELSE LEAVE scan
+END LOOP scan;
+\end{lstlisting}
+\end{document}
