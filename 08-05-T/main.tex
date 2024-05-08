@@ -1,0 +1,158 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati}
+\author{Luca Seggiani}
+\date{8 Maggio 2024}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{code-style}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=code-style}
+
+\begin{document}
+\maketitle
+Calcolare $F^+$ è molto costoso: l'algoritmo è a complessità esponenziale. Spesso però, quello che ci
+interessa beramente e verificare se $F^+$ contiene una certa dipendenza e non generare l'intera lista
+di chiusura. Per fare ciò basta calcolare $X^+$ per il teorema di chisura degli attributi:
+$$ F \vdash X \rightarrow Y \Leftrightarrow Y \subseteq X^+ $$
+\par\smallskip
+\textbf{Algoritmo per il calcolo di $\mathbf{X}^+$} \\
+Vediamo quindi come calcolare la chisurua $X^+$:
+\begin{itemize}
+  \item Input: $R(T,F), \quad X \subseteq T$;
+  \item Output: $X^+$ \textit{chiusura}.
+\end{itemize}
+\begin{lstlisting}[language=perl]
+metti X in X+
+while (X+ non cambia) do
+  foreach W -> V in F do
+    if W in X+ and V not in X+ then
+      metti V in X+
+return X+
+\end{lstlisting}
+\par\smallskip
+\textbf{Chiavi} \\
+Dato uno schema $R(T,F)$, un'insieme di attributi $K \subseteq T$ si dice \textbf{superchiave} di $R$ se la dipendenza funzionale
+$K \rightarrow T$ è implicata da $F$, ovvero se $K \rightarrow T \in F^+$. Un'insieme di attributi $K \subseteq T$ si dice a questo punto \textbf{chiave}
+di $R$ se $K$ è una superchiave di $R$ e non esiste alcun sottoinsieme proprio di $K$ che sia superchiave di $R$.
+Dato che in uno schema possono esserci più chiavi, di solito si identifica una chiave primaria che possa fare da identificatore
+per tutte le n-uple dello schema. Tutte le altre chiavi si dicono chiavi candidate.
+\par\smallskip
+\textbf{Algoritmo per tutte le chavi} \\
+Il problema di trovare tutte le chiavi di una relazione $R(Z)$ ha complessità esponenziale nel caso peggiore:
+\begin{itemize}
+  \item Gli attributi che stanno solo a sinistra sono in tutte le chiavi. Si chiami $N$ questo insieme;
+  \item Gli attributi che stanno solo a destra non sono in nessuna chiave. Si chiami $M$ questo insieme;
+  \item Si aggiunge a $N$ un'attributo alla volta tra quelli che non sono né in $N$ nè in $M$, poi una coppia di attributi,
+    e così via. Chiamiamo $X_i$ questo sottoinsieme di attributi: ad ogni aggiunta controlleremo se la dipendenza $N \cup X_i \rightarrow Z$ esiste.
+\end{itemize}
+\par\smallskip
+\textbf{Verifica di una chiave} \\
+Spesso è molto più conveniente verificare se una chiave è tale, piuttosto che trovare ogni possibile chiave. Per fare ciò,
+possiamo usare l'algoritmo per il calcolo della chiusura di un'insieme di attributi:
+\begin{itemize}
+  \item $X\subseteq T$ è superchiave di $R(T,F)$ se e solo se $X \rightarrow T \in F^+$, ovvero $T\subseteq X^+$
+  \item $X\subseteq T$ è chiave di $R(T, F)$ se e solo se $T \subseteq X^+$, e non esiste $Y \subset X$ tale che
+    $T \subseteq Y^+$.
+\end{itemize}
+\par\smallskip
+\textbf{Equivalenza} \\
+Due insiemi di dipendenze funzionali $F$ e $G$ sugli attributi $T$ di una relazione $R(T)$ sono equivalenti, in simboli $T \equiv G$, se e solo
+se $F^+ = G^+$. La relazione di equivalenza permette di stabilire se due insiemi di dipendenza rappresentano gli stessi fatti. Per verificare
+l'equivalenza è sufficiente che:
+\begin{itemize}
+  \item Tutte le dipendenze di $F$ appartengano a $G^+$;
+  \item Tutte le dipendenze di $G$ appartengano a $F^+$.
+\end{itemize}
+\par\smallskip
+\textbf{Ridondanza} \\
+Sia $F$ un insieme di dipendenze funzionali. Data $X\rightarrow Y \in F$, $X$ contiene un \textbf{attributo estraneo} se e solo se:
+$$ (F - \{X\rightarrow Y\}) \cup (X - \{A\rightarrow\} Y) \equiv F$$
+ovvero $X - \{A\} \rightarrow Y \in F^+$ \\ 
+$X\rightarrow Y$ è una \textbf{dipendenza ridondante} se e solo se $(F - \{X \rightarrow Y\}) \equiv F$, ovvero $X\rightarrow Y \in (F - \{X\rightarrow Y\})^+$.
+Le dipendenze che non contengono attributi estranei e la cui parte destra è un unico attributo sono dette \textbf{dipendenze elementari}.
+\par\smallskip
+\textbf{Copertura minimale} \\
+Sia $F$ un'insieme di dipendenze funzionali. $F$ è una \textbf{copertura minimale} (detta anche \textit{insieme minimale} e \textit{copertura canonica}) se e solo se:
+\begin{itemize}
+  \item Ogni parte destra di una dipendenza ha un unico attributo;
+  \item Le dipendenze non contengono attributi estranei;
+  \item Non esistono dipendenze ridondanti;
+\end{itemize}
+In soldoni, la copertura minimale rappresenta l'insieme di dipendenze funzionali $F'$ più piccolo che implica tutte le dipendenze di $F$.
+\par\smallskip
+\textbf{Algoritmo per il calcolo della copertura minimale} \\
+\begin{itemize}
+  \item Input: F;
+  \item Output G \textit{copertura minimale}:
+\end{itemize}
+\begin{lstlisting}[language=perl]
+metti F in G
+for each X -> G do
+  metti X in Z
+  for each A in X Do
+    if Y in (Z - {A})+_F then
+      metti Z - {A} in Z
+    metti (G - {X -> Y}) U (Z -> Y) in G
+  foreach F in G do
+    if f in (G-{f})+ then
+      metti G - {f} in G
+return G
+\end{lstlisting}
+\par\smallskip
+\textbf{Teorema della copertura minimale} \\
+Il precedente algoritmo dimostra il fatto che per ogni insieme di dipendenze funzionalil $F$ esiste una copertura minimale.
+Si noti che questo non afferma che la copertura minimale è unica: possono tranquillamente esistere coperture minimali equivalenti.
+\section{Normalizzazione}
+\par\smallskip
+\textbf{Eliminare le anomalie} \\
+La teoria che abbiamo sviluppato finora viene usata per identificare le anomalie in uno schema mal definito. Definiamo quindi il concetto di \textbf{forma normale}:
+una forma normale è una proprietà che deve essere soddisfatta dalla dipendenza fra attibuti di schemi "ben fatti". Noi vedremo due esempi:
+la \textbf{forma normale di Boyce-Codd}, e un suo miglioramento, la \textbf{terza forma normale}. 
+\par\smallskip
+\textbf{Forma normale di Boyce-Codd} \\
+Uno schema $R(T,F)$ è in forma normale di Boyce-Codd (BCNF) se e solo se per ogni dipendenza funzionale non banale
+$ X \rightarrow Y \in F^+ $, $X$ è superchiave di $R$. Per definizione, il fatto che uno schema sia o meno in BCNF dipende
+dalla chiusura $F^+$, non dalla specifica copertura $F$. Calcolare $F^+$, come abbiamo visto, ha complessità esponenziale:
+fortunatamente esiste un'algoritmo di complessità polinomiale per valutare se uno schema è in forma BCNF. Si usa il corollario:
+uno schema $R(T,F)$ con $F$ copertura minimale è in BCNF se e solo se per ogni dipendenza funzionale elementare $X \rightarrow A \in F$, 
+$X$ è superchiave.
+\begin{itemize}
+  \item Input: $R(T,F)$;
+  \item Output true se $R$ è in BCNF, false altrimenti. 
+\end{itemize}
+\begin{lstlisting}[language=perl]
+for each X -> Y in F do
+  if Y not in X and T not in X+ then
+    return false
+return true
+\end{lstlisting}
+\end{document}
