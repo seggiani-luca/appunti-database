@@ -1,0 +1,63 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati}
+\author{Luca Seggiani}
+\date{9 Maggio 2024}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{code-style}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=code-style}
+
+\begin{document}
+\maketitle
+\section{Data Manipulation}
+Vediamo adesso i costrutti della parte \textbf{DML} (\texit{Data Manipulation Language}), dell'SQL.
+\par\smallskip
+\textbf{Inserimento} \\
+L'inserimento consiste nel, considerata una nuova tabella, inserire un nuovo record i cui valori degli attributi
+possono essere sia statici che ricavati. Inseriamo un nuovo paziente nel database, notiamo i dati (statici):
+\begin{itemize}
+  \item Nome: Elvira
+  \item Cognome: Passerotti
+  \item Sesso: F
+  \item Data di nascita: 27 Ottobre 1964
+  \item Città: Pisa
+  \item Reddito: 1500 Euro
+  \item Codice Fiscale: PSSLVR65R67G702U
+\end{itemize}
+\begin{lstlisting}[language=SQL]
+INSERT INTO Paziente
+VALUES ('PSSLVR65R67G702U', 'Passerotti', 'Elvira', 'F', '1965-10-27', 'Pisa', 1500);
+\end{lstlisting}
+Dove è importante rispettare l'ordine di definizione degli attributi della tabella.
+
+\end{document}

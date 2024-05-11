@@ -1,0 +1,177 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati}
+\author{Luca Seggiani}
+\date{9 Maggio 2024}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{code-style}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=code-style}
+
+\begin{document}
+\maketitle
+\section{Manipolazione dei dati}
+Vediamo adesso i costrutti della parte \textbf{DML} (\textit{Data Manipulation Language}), dell'SQL.
+\par\smallskip
+\textbf{Inserimento} \\
+L'inserimento consiste nel, considerata una nuova tabella, inserire un nuovo record i cui valori degli attributi
+possono essere sia statici che ricavati. Inseriamo un nuovo paziente nel database, notiamo i dati (statici):
+\begin{itemize}
+  \item Nome: Elvira
+  \item Cognome: Passerotti
+  \item Sesso: F
+  \item Data di nascita: 27 Ottobre 1964
+  \item Città: Pisa
+  \item Reddito: 1500 Euro
+  \item Codice Fiscale: PSSLVR65R67G702U
+\end{itemize}
+\begin{lstlisting}[language=SQL]
+INSERT INTO Paziente
+VALUES ('PSSLVR65R67G702U', 'Passerotti', 'Elvira', 'F', '1965-10-27', 'Pisa', 1500);
+\end{lstlisting}
+Dove è importante rispettare l'ordine di definizione degli attributi della tabella. Facciamo un'altro esempio:
+vogliamo inserire il paziente Edoardo Lepre, visitato tre giorni fa, di codice fiscale "slq6". Poniamo però
+di non sapere se la visita era stata mutuata o meno:
+\begin{lstlisting}[language=SQL]
+INSERT INTO Visita(Medico, Paziente, Data)
+VALUES(010, 'slq_6', CURRENT_DATE - INTERVAL 3 DAY);
+\end{lstlisting}
+Questo mi permette di specificare solo alcuni valori, lasciando gli altri a NULL o al loro valore di default.
+Notiamo che, in generale, la sintassi:
+\begin{lstlisting}[language=SQL]
+INSERT INTO Tabella [(Attributo_1, Attributo_2, ...)]
+VALUES (Valore_1, Valore_2, ...);
+\end{lstlisting}
+Ci permette di definire qualsiasi attributo in qualsiasi ordine, anche diverso da quello di definizione.
+\par\smallskip
+\textbf{Inserimento con valori ricavati} \\
+E' possibile definire un'inserimento del tipo:
+\begin{lstlisting}[language=SQL]
+INSERT INTO Tabella [(Attributo_1, Attributo_2, ..., Attributo_N)]
+Query_di_selezione;
+\end{lstlisting}
+Attraverso una query "Query\_di\_selezione" arbitraria che restituisca valori per tutti gli attributi. Poniamo
+di voler archiviare tutte i record delle visite effettuate prima di due anni fa in una nuova tabella, VisitaVecchia(CognomePaziente, CognomeMedico, DataVisita, Specializzazione):
+\begin{lstlisting}[language=SQL]
+INSERT INTO VisitaVecchia
+SELECT P.Cognome AS CognomePaziente,
+  M.Cognome AS CognomeMedico,
+  V.Data AS DataVisita,
+  M.Specializzazione
+FROM Visita V INNER JOIN Medico M ON M.Matricola = V.Medico
+  INNER JOIN Paziente P ON P.CodFiscale = V.Paziente
+WHERE YEAR(V.Data) <= YAER(CURRENT_DATE) - 2;
+\end{lstlisting}
+Come vediamo, basterà definire una query che restituisce tutti i record da inserire nella tabella nell'ordine di definizione (dato nel SELECT).
+\par\smallskip
+\textbf{Aggiornamento} \\
+Possiamo anche aggiornare record già definiti. Dovremo però usare una clausola WHERE per specificare quali record aggiornare:
+\begin{lstlisting}[language=SQL]
+UPDATE Tabella
+SET Attributo_i = Valore_i, ecc...
+WHERE Condizione
+\end{lstlisting}
+Mutuiamo tutte le visite del mese corrente effettuate da pazienti nati prima del 1925:
+\begin{lstlisting}[language=SQL]
+UPDATE Visita
+SET Mutuata = 1
+WHERE MONTH(Data) = MONTH(CURRENT_DATE)
+  AND YEAR(Data) = YEAR(CURRENT_DATE)
+  AND Paziente IN (
+    SELECT CodFiscale
+    FROM Paziente
+    WHERE YEAR(DataNascita) < 1925
+  );
+\end{lstlisting}
+\par\smallskip
+\textbf{Cancellazione} \\
+Vediamo come cancellare record dalla tabella. La sintassi è analoga a quella dell'aggiornamento:
+\begin{lstlisting}[language=SQL]
+DELETE FROM Tabella
+WHERE Condizione
+\end{lstlisting}
+Poniamo di voler licenziare tutti i medici di Pisa che non hanno effettuato visite mutate il mese scorso.
+Scriviamo la query:
+\begin{lstlisting}[language=SQL]
+DELETE FROM Medico
+WHERE Matricola IN (
+  SELECT M_1.Matricola
+  FROM Medico M_1 LEFT OUTER JOIN (
+    SELECT V_2.Medico AS MedicoMutuato
+    FROM Visita V_2 INNER JOIN Medico M_2 ON M_2.Matricola = V_2.Medico
+    WHERE M_2.Citta = 'Pisa'
+      AND V_2.Mutuata = TRUE
+      AND V_2.Data > CURRENT_DATE - INTERVAL 1 MONTH
+    ) AS D
+    ON M_1.Matricola = D.MedicoMutuato
+    WHERE D.MedicoMutuato IS NULL
+);
+\end{lstlisting}
+Il DBMS riceve la query e restituisce un errore. Questo perchè, nel momento in cui dichiariamo l'operazione di cancellazione con DELETE FROM Medico;
+stiamo effettivamente bloccando la tabella. Non possiamo quindi definire una query che legga tale tabella: il DBMS ce lo impedirà in quanto potremmo
+generare loop infiniti. Possiamo risolvere questa situazione in più modi.
+\begin{itemize}
+  \item Trasformare la query in una derived table:
+\begin{lstlisting}[language=SQL]
+DELETE FROM Medico
+WHERE Matricola IN (
+  SELECT * FROM (
+    SELECT M_1.Matricola
+    FROM Medico M_1 LEFT OUTER JOIN (
+     SELECT V_2.Medico AS MedicoMutuato
+     FROM Visita V_2 INNER JOIN Medico M_2 ON M_2.Matricola = V_2.Medico
+     WHERE M_2.Citta = 'Pisa'
+       AND V_2.Mutuata = TRUE
+       AND V_2.Data > CURRENT_DATE - INTERVAL 1 MONTH
+     ) AS D
+     ON M_1.Matricola = D.MedicoMutuato
+     WHERE D.MedicoMutuato IS NULL
+  ) AS D_2
+);
+\end{lstlisting}
+Questo assicura che il valore della derived table venga calcolato prima dell'operazione di cancellazione, eludendo quindi il blocco imposto dal DBMS. La stessa
+cosa potrà essere fatta, anziché con una derived table, usando una CTE.
+\item Un'altro approccio, meno intuitivo, è quello di usare un join:
+\begin{lstlisting}[language=SQL]
+DELETE M_1.*
+FROM Medico M_1 LEFT OUTER JOIN (
+  SELECT V_2.Medico AS MedicoMutuato
+  FROM Visita V_2 INNER JOIN Medico M_2 ON M_2.Matricola = V_2.Medico
+  WHERE M_2.Citta = 'Pisa'
+    AND V_2.Mutuata = TRUE
+    AND V_2.Data > CURRENT_DATE - INTERVAL 1 MONTH
+ ) AS D
+ON M_1.Matricola = D.MedicoMutuato
+WHERE D.MedicoMutuato IS NULL;
+\end{lstlisting}
+\end{itemize}
+\end{document}
