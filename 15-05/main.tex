@@ -1,0 +1,103 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati}
+\author{Luca Seggiani}
+\date{15 Maggio 2024}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{code-style}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=code-style}
+
+\begin{document}
+\maketitle
+\section{Database attivi}
+Abbiamo visto finora le metodistiche dall'SQL procedurale, che permette di implementare funzionalità in linguaggio, appunto, procedurale, sebbene il paradigma dell'SQL sia in teoria dichiarativo. Adesso vedremo
+alcune caratteristiche dell'SQL che permettono di implementare comportamenti "attivi" del database: per la precisione, \textbf{trigger} e \textbf{event}.
+\par\smallskip
+\textbf{Trigger} \\
+Un trigger è una procedura che viene eseguita sulla base di eventi di istruzione DML (\textit{data manipulation language}).
+Un trigger è fornito di una \textbf{parte reattiva} che reagisce a eventi DML, o a determinati istanti temporali, che causa l'esecuzione
+di un'azione (operazione) sui dati. Gli eventi DML scatenanti possono ad esempio essere modifiche, cancellazioni, inserzioni, timer ecc... \\
+La \textbf{condizione} è un predicato booleano che viene valutato dopo l'evento. Un risultato positivo della condizione comporta
+l'esecuzione dell'azione. Abbiamo quindi:
+\begin{enumerate}
+  \item Evento;
+  \item Condizione;
+  \item Azione.
+\end{enumerate}
+Facciamo un'esempio: voglliamo gestire un'attributo ridondante nella tabella Paziente contenente la data nella quale un paziente è stato visitato l'ultima volta.
+Sarà un'attributo ridondante perché lo potremo già tovare nella tabella Visita. D'altronde, ad ogni successiva visita, l'attributo sulla tabella paziente
+andrà aggiornato. In ogni caso, il comportamento che vogliamo è che, all'inserzione dell'ultima visita nella tabella visita da parte di un'operatore, il database
+possa automaticamente (\textit{database attivo}) inserire l'informazione necessaria nella tabella paziente attraverso un trigger. \\
+Individuiamo evento, condizione ed azione:
+\begin{itemize}
+  \item \textbf{Evento:} l'evento sarà l'inserimento di una nuova visita nella tabella Visita;
+  \item \textbf{Condizione:} qui la condizione non c'é: ogni nuova visita è un'ultima visita.
+  \item \textbf{Azione:} rintraccia il paziente della visita, e aggiorna la sua ultima visita.
+\end{itemize}
+in SQL, la sintassi di un trigger sarà:
+\begin{lstlisting}[language=SQL]
+DROP TRIGGER IF EXISTS nome_trigger
+CREATE TRIGGER nome_trigger
+[BEFORE | AFTER][INSERT |UPDATE|DELETE] ON target
+FOR EACH ROW blocco_istruzioni
+\end{lstlisting}
+Vediamo i dettagli. Con BEFORE si indica un'azione di \textit{preprocessing} quindi di esecuzione prima dell'evento, mentre con AFTER
+si indica un'azione \textit{a posteriori}, o "collaterale", che viene eseguita dopo l'evento. La sintassi che vorremo nell'esempio appena sopra
+sarà quindi:
+\begin{lstlisting}[language=SQL]
+DROP TRIGGER IF EXISTS aggiorna_ultima_visita;
+CREATE TRIGGER aggiorna_ultima_visita
+AFTER INSERT ON Visita FOR EACH ROW
+  UPDATE Paziente
+  SET UltimaVisita = CURRENT_DATE
+  WHERE CodFiscale = NEW.Paziente
+\end{lstlisting}
+dove NEW indica il record che è stato già inserito (in un trigger AFTER; in un trigger BEFORE sarebbe stato quello che sta per essere inserito)..
+\par\smallskip
+\textbf{Trigger multi-statement} \\
+Un trigger \textit{multi-statement} ("multi-blocco") è formato da più blocchi separati da punti e virgola. Si rende quindi necessario,
+come avevamo già visto, l'uso di un delimitatore ausiliario:
+\begin{lstlisting}[language=SQL]
+DROP TRIGGER IF EXISTS nome_trigger;
+DELIMITER $$
+CREATE TRIGGER nome_trigger
+BEFORE ... ON ...
+FOR EACH ROW
+
+BEGIN
+-- blocchi di istruzioni
+END $$
+DELIMITER ;
+\end{lstlisting}
+
+\end{document}
