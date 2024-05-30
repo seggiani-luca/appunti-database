@@ -1,0 +1,202 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[french,italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\frenchspacing 
+\title{Appunti Basi di Dati}
+\author{Luca Seggiani}
+\date{29 Maggio 2024}
+
+\begin{document}
+\maketitle
+\section{Gestione dell'affidabilità}
+Il gestore dell'affidabilità si occupa dell'esecuzione dei comandi transazionali, assicurando le loro caratteristiche
+acide. I \textbf{comandi transazionali} sono:
+\begin{itemize}
+  \item Start transaction (B, \textit{begin});
+  \item Commit work (C, \textit{commit});
+  \item Rollback work (A, \textit{abort}).
+\end{itemize}
+Il gestore si occupa anche delle operazioni di \textbf{ripristino} (\textit{recovery}) dopo eventuali guasti:
+\begin{itemize}
+  \item \textbf{Ripresa a caldo} (\textit{warm restart});
+  \item \textbf{Ripresa a freddo} (\textit{cold restart}).
+\end{itemize}
+Il gestore dell'affidabilità mantiene un \textbf{log} delle transazioni: un'archivio permanente che registra le operazioni svolte.
+Il gestore dell'affidabilità lavora insieme al gestore dei metodi d'accesso (che gestisce i metodi di sistema \textit{fix} e \textit{unfix}),
+e al gestore delle transazioni.
+\par\smallskip
+\textbf{Persistenza delle memorie} \\
+Ricordiamo brevemente il concetto di persistenza di una memoria. Riguardo alle memorie di interesse nel nostro caso, si ha che:
+\begin{itemize}
+  \item \textbf{Memoria centrale:} è persistente, l'informazione viene però distrutta da qualsiasi guasto di sistema;
+  \item \textbf{Memoria di massa:} è persistente e sopravvive ai guasti di sistema, ma può comunque danneggiarsi;
+  \item \textbf{Memoria stabile:} astrazione che rappresenta una memoria persistente non danneggiabile, che viene
+    perseguita nella realtà attraverso la ridondanza:
+    \begin{itemize}
+      \item Dischi replicati;
+      \item Nastri magnetici;
+      \item ecc...
+    \end{itemize}
+\end{itemize}
+\par\smallskip
+\textbf{Log} \\
+Il log è un file \textbf{sequenziale} (quindi non ad accesso casuale) gestito dal gestore dell'affidabilità, scritto in 
+memoria stabile. Riporta tutta le operazioni svolte sulla base di dati, nell'ordine in cui vengono svolte. E' formato da
+\textbf{record}:
+\begin{itemize}
+  \item \textbf{Operazioni delle transazioni}
+    \begin{itemize}
+      \item begin, B(T);
+      \item insert, I(T, O, AS) (nel record O, T memorizza per la prima volta l\textbf{after state} AS);
+      \item delete, D(T, O, BS) (nel record O, T elimina il \textbf{before state} BS);
+      \item update, U(T, O, BS, AS) (nel record O, T elimina il before state BS e memorizza l'after state AS);
+      \item commit, C(T);
+      \item abort, A(T).
+    \end{itemize}
+  \item \textbf{Record di sistema}:
+    \begin{itemize}
+      \item dump;
+      \item checkpoint.
+    \end{itemize}
+\end{itemize}
+Queste ultime due transazioni servono a fare regisitrazioni dell'intero stato di un database (\textit{dump}) o delle sue transazioni (\textit{checkpoint}).
+\par\smallskip
+\textbf{Checkpoint e dump} \\
+Il log ha la funzione di permettere la ricostruzione delle operazioni. Checkpoint e dump forniscono stadi intermedi di ricostruzione,
+da utilizzare in caso di guasti.
+\begin{itemize}
+  \item \textbf{Checkpoint} \\
+    Il checkpoint registra quali transazioni sono attive in un dato istante temporale, cioè "a metà strada". Ha lo scopo
+    di confermare che altre transazioni o non sono ancora iniziate, sono già finite. Per tutte le transazioni che hanno effettuate
+    il commit i dati possono essere trasferiti in memoria di massa. Esistono più modalità di checkpoint, di cui ne vedremo una:
+    \begin{itemize}
+      \item Si sospende l'accettazione di operazioni di commit e abort finché non è completata la registrazione;
+      \item Si forza la scrittura in memoria di massa delle pagine in memoria modificate da transazioni che hanno
+        già fatto commit;
+      \item Si forza la scrittura nel log di un record contenente gli identificatori di tutte le transazioni attive;
+      \item Si ricomincia ad accettare tutte le operazioni da parte delle transazioni.
+    \end{itemize}
+    Con questo meccanismo si assicura la persistenza delle transazioni che hanno eseguito il commit.
+  \item \textbf{Dump} \\
+    Il dump è una copia completa della base di dati (un \textit{backup}). Solitamente viene prodotta mentre il sistema è inattivo,
+    salvato in memoria stabile, e registrato in un record di dump nel log che indica il momento in cui il dump è stato effettuato,
+    vari dettagli pratici, ecc...
+\end{itemize}
+\par\smallskip
+\textbf{Esito di una transazione} \\
+Vediamo cosa succede ad una transazione quando si verifica un guasto. L'esito di una transazione è determinato irrevocabilmente
+quando viene scritto il record di commit nel log in modo \textbf{sincrono} e forzato. Un guasto prima di tale istante porta
+ad un UNDO di tutte le azioni, e ad una ricostruzione dello stato originario (prima della transazione) della base di dati. Un guasto dopo
+tale istante non deve avere consegueze sugli effetti di tale transazioni: lo stato finale deve essere ricostruito, se necessario con
+un REDO. I record di abort possono essere invece scritti in modo \textbf{asincrono}.
+\par\smallskip
+\textbf{Regole di modifica del log} \\
+Esistono due regole per la scrittura nel log:
+\begin{itemize}
+  \item \textbf{Write-Ahead} \\
+    Si scrive la parte BS (before state) del log prima di effettuare l'operazione sulla base di dati. Questo
+    consente di disfare le azioni già memorizzate (UNDO) di transazioni senza commit avendo in memoria stabile
+    un valore corretto.
+  \item \textbf{Commit-Precedenza} \\
+    Si scrive la parte AS (after state) dei record di log prima di commit. Consente di rifare le azioni (REDO)
+    di una transazione che effettuato il commit ma le cui pagine modificate non sono ancora state trascritte in
+    memoria di massa.
+\end{itemize}
+\par\smallskip
+\textbf{Operazioni UNDO e REDO} \\
+Vediamo nel dettaglio le operazioni UNDO e REDO:
+\begin{itemize}
+  \item \textbf{UNDO} \\
+    L'UNDO (disfacimento) di un azione è, per le operazioni viste su un oggetto $O$:
+    \begin{itemize}
+      \item update, delte: copiare il valore del BS (before state) in $O$;
+      \item insert: eliminare $O$.
+    \end{itemize}
+  \item \textbf{REDO} \\
+    Il REDO (rifacimento) di un'azione è, per le operazioni viste su un oggetto $O$:
+    \begin{itemize}
+      \item insert, update: copiare il valore dell'AS (after state) in $O$;
+      \item delete: eliminare $O$.
+     \end{itemize}
+\end{itemize}
+Valgono le \textbf{idempotenze}:
+$$ \mathrm{undo(undo(A))} = \mathrm{undo(A)} $$
+$$ \mathrm{redo(redo(A))} = \mathrm{redo(A)} $$
+Cioè, l'annullamento o il rifacimento di un'operazione $A$ $n$ volte è uguale all'annullamento o il rifacimento una singola volta.
+\par\smallskip
+\textbf{Modalità di inserzione in log} \\
+Esistono più modalità di trascrizione delle operazioni sul log:
+\begin{itemize}
+  \item \textbf{Modalità immediata} \\
+    La modalità immediata comporta la trascrizione immediata di tutte le operazioni di scrittura provenienti
+    da transazioni uncommitted (che non hanno ancora fatto commit). Richiede un UNDO al momento del guasto, ma non richiede
+    REDO nel caso di esito con successo.
+  \item \textbf{Modalità differita} \\
+    Nella modalità differita si eseguono prima tutte le update, e poi le operazioni di scrittura. Non esistono
+    valor AS nel log che vengono da transazioni uncommitted. Non c'è bisogno di UNDO, in quanto non ci sono scritture
+    prima del commit. Richiede però un REDO nel caso non si sappia l'esito di una transazione (dopo le update potrebbe
+    comunque non essere stata eseguita).
+  \item \textbf{Modalità mista} \\
+    Nella modalità mista la scrittura può avvenire sia in immediata che in differita. Potrebbero
+    essere necessarie sia UNDO che REDO.
+\end{itemize}
+Alcune considerazioni pratiche: la modalità differita non viene molto utilizzata in pratica. Questo perché
+tale modalità è molto più efficiente nel \textbf{recupero} (\textit{recovery}), ma è complessivamente meno efficiente
+di una modalità in cui il gestore può scegliere liberamente quando scrivere in memoria secondaria. Visto che il caso
+naturale di una transizione è quello di un'esito di successo, si preferisce adottare una modalità che ottimizzi questo
+tipo di risultato.
+\par\smallskip
+\textbf{Guasti} \\
+Esistono più tipi di guasti:
+\begin{itemize}
+  \item \textbf{Guasti "soft"} \\
+    I guasti soft (\textit{morbidi}) sono errori di programma, crash di sistema, cadute di tensione, ecc...
+    Si perdono i contenuti della memoria centrale, ma non si perde né la memoria secondaria, cioè il database, né
+    la memoria stabile, cioè il log. Si può fare una ripresa a caldo, (\textit{warm start}).
+  \item \textbf{Guasti "hard"} \\
+    I guasti hard (\textit{duri}) riguardano la memoria secondaria, ma non la memoria stabile. Se si perde la base di dati, bisogna fare una ripresa a
+    freddo (\textit{cold restart}), ricostruendo la base dai log. Nel caso di perdita della memoria stabile, cioè del log,
+    ogni tentativo di recupero è impossibile. Si ricomincia da capo.
+\end{itemize}
+\par\smallskip
+\textbf{Modello di funzionamento fail-stop} \\
+L'individuazione di un guasto forza l'arresto completo di tutte le transazioni in corso. Quindi si riavvia il sistema,
+e si effettua una procedura di \textbf{restart}, al termine della quale, se si ha successo, si riavvia nuovamente, in caso contrario il \textbf{buffer} è vuoto, ma le transazioni
+possono ricominciare.
+\par\smallskip
+\textbf{Procedura di restart} \\
+Il processo di restart ha l'obbiettivo di classificare le transazioni in:
+\begin{itemize}
+  \item \textbf{Completate}: ergo tutte in memoria stabile;
+  \item \textbf{In commit ma non necessariamente completate}: può servire un REDO;
+  \item \textbf{Senza commit}: vanno annullate, ergo serve un UNDO.
+\end{itemize}
+
+Il gestore dell'affidabilità, al restart di sistema:
+\begin{itemize}
+  \item Legge su un file di RESTART (nel log) l'indirizzo dell'ultimo checkpoint;
+  \item Prepara due file: un UNDO list con gli identificatori delle transazioni attive, e un REDO list vuoto;
+  \item Si assicura che nessun'utente si attivo.
+\end{itemize}
+\par\smallskip
+\textbf{Ripresa a caldo} \\
+La ripresa a caldo avviene in quattro fasi:
+\begin{itemize}
+  \item Si trova l'ultimo checkpoint (ripercorrendo il log a ritroso);
+  \item Si costruisce gli insiemi UNDO (transazioni attive ma non committed prima del guasto, da disfare) e REDO
+    (transazioni committed tra il CK e il guasto, da rifare).
+  \item Si ripercorre il log all'indietro (\textbf{rollback}) fino alla più vecchia azione delle transazioni in UNDO e REDO, disfacendo
+    tutte le azioni delle transazioni in UNDO;
+  \item Si ripercorre il log in avanti (\textbf{rollforward}) rifacendo tutte le azioni delle transazioni in redo.
+\end{itemize}
+\par\smallskip
+\textbf{Ripresa a freddo} \\
+La ripresa a freddo avviene in due fasi, più la ripresa a caldo:
+\begin{itemize}
+  \item Ci si riporta al record di dump più recente nel log e si ripristina la parte di dati deteriorata;
+  \item Si eseguono le operazioni registrate sul log sulla parte deteriorata fino all'istante del caldo;
+  \item Si esegue una ripresa a caldo.
+\end{itemize}
+\end{document}
